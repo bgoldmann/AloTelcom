@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- **Vercel Deployment Environment Variables**
+  - Removed invalid secret references from `vercel.json` that were causing deployment errors
+  - Environment variables should now be set directly in Vercel dashboard instead of referencing non-existent secrets
+  - Fixed error: "Environment Variable 'VITE_SUPABASE_URL' references Secret 'supabase_url', which does not exist"
+
 ### Planned
 - Real payment processing with Stripe
 - Email service integration (SendGrid/Resend)
