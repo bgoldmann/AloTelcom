@@ -15,6 +15,13 @@ const Checkout: React.FC = () => {
   const [deviceModel, setDeviceModel] = useState('');
   const [imeiError, setImeiError] = useState('');
   const [agreedToTerms, setAgreedToTerms] = useState(false);
+  
+  // SMS/MMS/2FA specific fields
+  const [phoneNumber, setPhoneNumber] = useState('');
+  const [fromNumber, setFromNumber] = useState('');
+  const [messageText, setMessageText] = useState('');
+  const [mediaUrls, setMediaUrls] = useState<string[]>(['']);
+  const [verificationChannel, setVerificationChannel] = useState<'sms' | 'voice' | 'flash_call'>('sms');
 
   if (!cart) {
     return (
@@ -46,9 +53,26 @@ const Checkout: React.FC = () => {
   const handlePaymentClick = (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Validate IMEI
-    if (!validateImei(imei)) {
-      // Ensure focus or error visibility
+    // Validate IMEI only for eSIM orders
+    if (cart.type === 'esim' && !validateImei(imei)) {
+      return;
+    }
+    
+    // Validate phone number for SMS/MMS/2FA
+    if ((cart.type === 'sms' || cart.type === 'mms' || cart.type === '2fa') && !phoneNumber) {
+      alert('Please enter a phone number');
+      return;
+    }
+    
+    // Validate sender number for SMS/MMS
+    if ((cart.type === 'sms' || cart.type === 'mms') && !fromNumber) {
+      alert('Please enter a sender phone number');
+      return;
+    }
+    
+    // Validate media URLs for MMS
+    if (cart.type === 'mms' && (!mediaUrls || mediaUrls.length === 0 || !mediaUrls[0])) {
+      alert('Please enter at least one media URL for MMS');
       return;
     }
 
@@ -62,7 +86,37 @@ const Checkout: React.FC = () => {
     
     try {
       if (cart) {
-        await addOrder(cart, imei, deviceModel);
+        // Prepare additional data for SMS/MMS/2FA orders
+        const additionalData: {
+          email?: string;
+          name?: string;
+          phoneNumber?: string;
+          fromNumber?: string;
+          mediaUrls?: string[];
+          channel?: 'sms' | 'voice' | 'flash_call';
+        } = {
+          email,
+          name: user?.name,
+        };
+        
+        // Add service-specific data
+        if (cart.type === 'sms' || cart.type === 'mms' || cart.type === '2fa') {
+          additionalData.phoneNumber = phoneNumber;
+        }
+        
+        if (cart.type === 'sms' || cart.type === 'mms') {
+          additionalData.fromNumber = fromNumber;
+        }
+        
+        if (cart.type === 'mms') {
+          additionalData.mediaUrls = mediaUrls.filter(url => url.trim() !== '');
+        }
+        
+        if (cart.type === '2fa') {
+          additionalData.channel = verificationChannel;
+        }
+        
+        await addOrder(cart, imei, deviceModel, additionalData);
       }
       setIsProcessing(false);
       setShowConfirmation(false);
@@ -105,47 +159,156 @@ const Checkout: React.FC = () => {
                </div>
             </div>
 
-            {/* Device Registration (New Section) */}
-            <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-               <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                 <div className="bg-orange-100 p-1.5 rounded-full text-orange-600 font-bold text-xs w-6 h-6 flex items-center justify-center">2</div>
-                 Device Registration
-               </h2>
-               <div className="space-y-4">
-                 <div>
-                   <label className="block text-sm font-medium text-gray-700 mb-1">Device Model</label>
-                   <input 
-                     type="text" 
-                     value={deviceModel}
-                     onChange={(e) => setDeviceModel(e.target.value)}
-                     className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-pars-cta focus:border-transparent outline-none transition"
-                     placeholder="e.g. iPhone 14 Pro, Samsung S23"
-                   />
+            {/* Device Registration (eSIM only) or Service Configuration */}
+            {(cart.type === 'esim') ? (
+              <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                 <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                   <div className="bg-orange-100 p-1.5 rounded-full text-orange-600 font-bold text-xs w-6 h-6 flex items-center justify-center">2</div>
+                   Device Registration
+                 </h2>
+                 <div className="space-y-4">
+                   <div>
+                     <label className="block text-sm font-medium text-gray-700 mb-1">Device Model</label>
+                     <input 
+                       type="text" 
+                       value={deviceModel}
+                       onChange={(e) => setDeviceModel(e.target.value)}
+                       className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-pars-cta focus:border-transparent outline-none transition"
+                       placeholder="e.g. iPhone 14 Pro, Samsung S23"
+                     />
+                   </div>
+                   <div>
+                     <label className="block text-sm font-medium text-gray-700 mb-1">IMEI Number</label>
+                     <input 
+                       type="text" 
+                       required
+                       value={imei}
+                       onChange={(e) => {
+                         const val = e.target.value.replace(/\D/g, '').slice(0, 15);
+                         setImei(val);
+                         if (val.length === 15) setImeiError('');
+                       }}
+                       className={`w-full border rounded-lg px-4 py-2.5 focus:ring-2 focus:outline-none transition ${imeiError ? 'border-red-300 focus:ring-red-200' : 'border-gray-300 focus:ring-pars-cta'}`}
+                       placeholder="15-digit IMEI number"
+                     />
+                     {imeiError ? (
+                       <p className="text-xs text-red-500 mt-1">{imeiError}</p>
+                     ) : (
+                       <p className="text-xs text-gray-500 mt-1 flex items-center gap-1">
+                         <Info className="h-3 w-3" /> Dial *#06# on your phone to get your IMEI
+                       </p>
+                     )}
+                   </div>
                  </div>
-                 <div>
-                   <label className="block text-sm font-medium text-gray-700 mb-1">IMEI Number</label>
-                   <input 
-                     type="text" 
-                     required
-                     value={imei}
-                     onChange={(e) => {
-                       const val = e.target.value.replace(/\D/g, '').slice(0, 15);
-                       setImei(val);
-                       if (val.length === 15) setImeiError('');
-                     }}
-                     className={`w-full border rounded-lg px-4 py-2.5 focus:ring-2 focus:outline-none transition ${imeiError ? 'border-red-300 focus:ring-red-200' : 'border-gray-300 focus:ring-pars-cta'}`}
-                     placeholder="15-digit IMEI number"
-                   />
-                   {imeiError ? (
-                     <p className="text-xs text-red-500 mt-1">{imeiError}</p>
-                   ) : (
-                     <p className="text-xs text-gray-500 mt-1 flex items-center gap-1">
-                       <Info className="h-3 w-3" /> Dial *#06# on your phone to get your IMEI
-                     </p>
+              </div>
+            ) : (cart.type === 'sms' || cart.type === 'mms' || cart.type === '2fa') ? (
+              <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                 <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                   <div className="bg-orange-100 p-1.5 rounded-full text-orange-600 font-bold text-xs w-6 h-6 flex items-center justify-center">2</div>
+                   Service Configuration
+                 </h2>
+                 <div className="space-y-4">
+                   <div>
+                     <label className="block text-sm font-medium text-gray-700 mb-1">
+                       {cart.type === '2fa' ? 'Phone Number' : 'Destination Phone Number'}
+                       <span className="text-red-500">*</span>
+                     </label>
+                     <input 
+                       type="tel" 
+                       required
+                       value={phoneNumber}
+                       onChange={(e) => setPhoneNumber(e.target.value)}
+                       className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-pars-cta focus:border-transparent outline-none transition"
+                       placeholder="+1234567890"
+                     />
+                     <p className="text-xs text-gray-500 mt-1">Enter phone number in E.164 format (e.g., +1234567890)</p>
+                   </div>
+                   
+                   {(cart.type === 'sms' || cart.type === 'mms') && (
+                     <>
+                       <div>
+                         <label className="block text-sm font-medium text-gray-700 mb-1">
+                           Sender Phone Number
+                           <span className="text-red-500">*</span>
+                         </label>
+                         <input 
+                           type="tel" 
+                           required
+                           value={fromNumber}
+                           onChange={(e) => setFromNumber(e.target.value)}
+                           className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-pars-cta focus:border-transparent outline-none transition"
+                           placeholder="+1234567890"
+                         />
+                         <p className="text-xs text-gray-500 mt-1">Your Telnyx phone number</p>
+                       </div>
+                       <div>
+                         <label className="block text-sm font-medium text-gray-700 mb-1">Message Text</label>
+                         <textarea 
+                           value={messageText}
+                           onChange={(e) => setMessageText(e.target.value)}
+                           className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-pars-cta focus:border-transparent outline-none transition"
+                           placeholder="Enter your message here..."
+                           rows={3}
+                         />
+                       </div>
+                     </>
+                   )}
+                   
+                   {cart.type === 'mms' && (
+                     <div>
+                       <label className="block text-sm font-medium text-gray-700 mb-1">Media URLs</label>
+                       {mediaUrls.map((url, index) => (
+                         <div key={index} className="mb-2 flex gap-2">
+                           <input 
+                             type="url" 
+                             value={url}
+                             onChange={(e) => {
+                               const newUrls = [...mediaUrls];
+                               newUrls[index] = e.target.value;
+                               setMediaUrls(newUrls);
+                             }}
+                             className="flex-1 border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-pars-cta focus:border-transparent outline-none transition"
+                             placeholder="https://example.com/image.jpg"
+                           />
+                           {mediaUrls.length > 1 && (
+                             <button
+                               type="button"
+                               onClick={() => setMediaUrls(mediaUrls.filter((_, i) => i !== index))}
+                               className="px-3 py-2 text-red-600 hover:bg-red-50 rounded-lg transition"
+                             >
+                               Remove
+                             </button>
+                           )}
+                         </div>
+                       ))}
+                       <button
+                         type="button"
+                         onClick={() => setMediaUrls([...mediaUrls, ''])}
+                         className="text-sm text-pars-cta hover:underline mt-2"
+                       >
+                         + Add another media URL
+                       </button>
+                     </div>
+                   )}
+                   
+                   {cart.type === '2fa' && (
+                     <div>
+                       <label className="block text-sm font-medium text-gray-700 mb-1">Verification Channel</label>
+                       <select
+                         value={verificationChannel}
+                         onChange={(e) => setVerificationChannel(e.target.value as 'sms' | 'voice' | 'flash_call')}
+                         className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-pars-cta focus:border-transparent outline-none transition"
+                       >
+                         <option value="sms">SMS</option>
+                         <option value="voice">Voice Call</option>
+                         <option value="flash_call">Flash Call</option>
+                       </select>
+                       <p className="text-xs text-gray-500 mt-1">Choose how to deliver the verification code</p>
+                     </div>
                    )}
                  </div>
-               </div>
-            </div>
+              </div>
+            ) : null}
 
             {/* Payment Method */}
             <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
@@ -208,11 +371,16 @@ const Checkout: React.FC = () => {
               
               <div className="flex items-start gap-4 mb-6 pb-6 border-b border-gray-100">
                 <div className="bg-gray-100 w-16 h-16 rounded-lg flex items-center justify-center text-3xl shadow-inner">
-                  {cart.flag}
+                  {cart.flag || (cart.type === 'sms' ? '💬' : cart.type === 'mms' ? '📷' : cart.type === '2fa' ? '🔐' : '📱')}
                 </div>
                 <div>
-                  <h3 className="font-bold text-gray-900">{cart.country} eSIM</h3>
-                  <p className="text-sm text-gray-500">{cart.data} Data • {cart.validity}</p>
+                  <h3 className="font-bold text-gray-900">
+                    {cart.type === 'sms' ? 'SMS Service' : 
+                     cart.type === 'mms' ? 'MMS Service' : 
+                     cart.type === '2fa' ? '2FA Verification' : 
+                     `${cart.country} ${cart.type.toUpperCase()}`}
+                  </h3>
+                  <p className="text-sm text-gray-500">{cart.data} • {cart.validity}</p>
                 </div>
               </div>
 
@@ -275,9 +443,14 @@ const Checkout: React.FC = () => {
             
             <div className="p-6 space-y-4">
               <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-xl border border-gray-100">
-                <div className="text-4xl">{cart.flag}</div>
+                <div className="text-4xl">{cart.flag || '📱'}</div>
                 <div>
-                  <p className="font-bold text-gray-900 text-lg">{cart.country}</p>
+                  <p className="font-bold text-gray-900 text-lg">
+                    {cart.type === 'sms' ? 'SMS Service' : 
+                     cart.type === 'mms' ? 'MMS Service' : 
+                     cart.type === '2fa' ? '2FA Verification' : 
+                     `${cart.country} ${cart.type.toUpperCase()}`}
+                  </p>
                   <p className="text-sm text-gray-500">{cart.data} • {cart.validity}</p>
                 </div>
               </div>
@@ -287,14 +460,40 @@ const Checkout: React.FC = () => {
                    <span className="text-gray-500">Email:</span>
                    <span className="font-medium">{email}</span>
                  </div>
-                 <div className="flex justify-between">
-                   <span className="text-gray-500">Device:</span>
-                   <span className="font-medium">{deviceModel || 'Not specified'}</span>
-                 </div>
-                 <div className="flex justify-between">
-                   <span className="text-gray-500">IMEI:</span>
-                   <span className="font-medium font-mono">{imei}</span>
-                 </div>
+                 
+                 {cart.type === 'esim' && (
+                   <>
+                     <div className="flex justify-between">
+                       <span className="text-gray-500">Device:</span>
+                       <span className="font-medium">{deviceModel || 'Not specified'}</span>
+                     </div>
+                     <div className="flex justify-between">
+                       <span className="text-gray-500">IMEI:</span>
+                       <span className="font-medium font-mono">{imei}</span>
+                     </div>
+                   </>
+                 )}
+                 
+                 {(cart.type === 'sms' || cart.type === 'mms' || cart.type === '2fa') && (
+                   <>
+                     <div className="flex justify-between">
+                       <span className="text-gray-500">Phone Number:</span>
+                       <span className="font-medium font-mono">{phoneNumber || 'Not specified'}</span>
+                     </div>
+                     {(cart.type === 'sms' || cart.type === 'mms') && (
+                       <div className="flex justify-between">
+                         <span className="text-gray-500">From Number:</span>
+                         <span className="font-medium font-mono">{fromNumber || 'Not specified'}</span>
+                       </div>
+                     )}
+                     {cart.type === '2fa' && (
+                       <div className="flex justify-between">
+                         <span className="text-gray-500">Channel:</span>
+                         <span className="font-medium capitalize">{verificationChannel}</span>
+                       </div>
+                     )}
+                   </>
+                 )}
               </div>
               
               <div className="flex justify-between items-center py-4 border-t border-gray-100">

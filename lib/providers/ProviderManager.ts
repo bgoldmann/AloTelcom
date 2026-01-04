@@ -154,6 +154,7 @@ export class ProviderManager {
 
   /**
    * Send SMS message (Telnyx only for now)
+   * Recommended: Use helper function sendSMS() from './helpers-communication'
    */
   async sendSMS(message: SMSMessage): Promise<SMSResult> {
     const telnyx = this.getProvider('telnyx');
@@ -171,6 +172,31 @@ export class ProviderManager {
       return {
         success: false,
         error: error?.message || 'Failed to send SMS',
+        provider: 'telnyx',
+      };
+    }
+  }
+
+  /**
+   * Send MMS message (Telnyx only for now)
+   * Recommended: Use helper function sendMMS() from './helpers-communication'
+   */
+  async sendMMS(message: SMSMessage): Promise<SMSResult> {
+    const telnyx = this.getProvider('telnyx');
+    
+    if (!telnyx || !telnyx.sendMMS) {
+      return {
+        success: false,
+        error: 'MMS service not available (Telnyx not configured)',
+      };
+    }
+
+    try {
+      return await telnyx.sendMMS(message);
+    } catch (error: any) {
+      return {
+        success: false,
+        error: error?.message || 'Failed to send MMS',
         provider: 'telnyx',
       };
     }

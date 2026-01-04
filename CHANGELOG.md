@@ -8,6 +8,101 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **SMS/MMS/2FA Order System Integration**
+  - Integrated SMS, MMS, and 2FA services into the existing order system
+  - Created order helpers: `createSMSOrder`, `createMMSOrder`, `create2FAOrder`
+  - Updated `store.tsx` `addOrder` to route orders to appropriate providers based on plan type
+  - Enhanced `Checkout.tsx` with conditional forms for different service types:
+    - eSIM: Device registration (IMEI, device model)
+    - SMS/MMS: Phone numbers, message text, media URLs (MMS)
+    - 2FA: Phone number, verification channel selection
+  - Updated `types.ts` to include `'sms'`, `'mms'`, `'2fa'` as product types
+  - Updated database schema (`supabase/schema.sql`) to support new product types
+  - Added service-specific fields to Plan interface (phoneNumber, fromNumber, channel)
+  - Order routing logic automatically selects correct provider based on service type
+  - Files updated:
+    - `lib/providers/helpers.ts` - Added SMS/MMS/2FA order creation functions
+    - `store.tsx` - Enhanced addOrder with provider routing
+    - `pages/Checkout.tsx` - Conditional form fields based on service type
+    - `types.ts` - Added new product types and service-specific fields
+    - `supabase/schema.sql` - Updated product_type ENUM
+    - `lib/providers/index.ts` - Exported new order helpers
+- **Telnyx SMS/MMS and 2FA Services Implementation**
+  - Implemented SMS messaging via Telnyx Messaging API
+  - Implemented MMS messaging with media URL support
+  - Implemented 2FA verification via Telnyx Verify API
+  - Support for SMS, Voice, and Flash Call verification channels
+  - Added verification code sending and verification methods
+  - Created communication service helpers (sendSMS, sendMMS, send2FACode, verify2FACode)
+  - Added 2FA types (VerifyRequest, VerifyResult, VerifyCheck, VerifyCheckResult)
+  - Configuration support for Telnyx Verify Profile ID
+  - Proper error handling and response parsing
+  - API reference documentation in code comments
+  - Files created:
+    - `lib/providers/helpers-communication.ts` - Communication service helpers
+  - Files updated:
+    - `lib/providers/adapters/TelnyxProvider.ts` - Full SMS/MMS/2FA implementation
+    - `lib/providers/types.ts` - Added 2FA verification types
+    - `lib/providers/config.ts` - Added Verify Profile ID configuration
+    - `lib/providers/index.ts` - Exported communication helpers
+    - `lib/providers/README.md` - Updated with SMS/MMS/2FA usage examples
+  - Environment variables:
+    - `VITE_TELNYX_VERIFY_PROFILE_ID` - Optional: Telnyx Verify Profile ID for 2FA
+  - References:
+    - Telnyx Messaging API: https://developers.telnyx.com/docs/api/v2/messaging
+    - Telnyx Verify API: https://developers.telnyx.com/docs/identity/verify/quickstart
+- **VPN Provider Integration**
+  - Created VPN provider adapter supporting multiple VPN providers
+  - Supports hide.me, ResellVPN, FortisVPN, PureVPN, WorldVPN
+  - Implemented VPN account creation, status tracking, and management
+  - Added VPN order creation helper function
+  - Configured provider type via VITE_VPN_PROVIDER environment variable
+  - Integrated with multi-provider orchestration system
+  - Added VPN provider to database schema
+  - Configuration via VITE_VPN_API_KEY, VITE_VPN_API_SECRET environment variables
+  - Provider-specific authentication methods (Bearer, Basic, API Key)
+  - Account suspension and reactivation capabilities
+  - Server location listing support
+  - Files created:
+    - `lib/providers/adapters/VPNProvider.ts` - VPN provider adapter
+  - Files updated:
+    - `lib/providers/types.ts` - Added VPN types and provider name
+    - `lib/providers/config.ts` - Added VPN provider initialization
+    - `lib/providers/index.ts` - Exported VPN provider
+    - `lib/providers/helpers.ts` - Added createVPNOrder function
+    - `supabase/provider_schema.sql` - Added VPN provider record
+    - `lib/providers/README.md` - Updated documentation
+- **Service Coverage Analysis Report**
+  - Comprehensive service-provider mapping analysis
+  - Identified VPN service gap (listed but no provider)
+  - Documented Telnyx services available but not implemented (SMS/MMS, 2FA, Video, Fax, IoT)
+  - Provider recommendations for missing services
+  - Implementation roadmap for service expansion
+  - Complete coverage matrix showing current vs. needed providers
+  - Recommendations: Windscribe for VPN, implement Telnyx SMS/MMS and 2FA
+  - Report: `SERVICE_COVERAGE_ANALYSIS.md`
+- **Phase 1.1: Airalo Provider Integration**
+  - Created Airalo provider adapter for Partner API integration
+  - Added as Tier 2 backup eSIM provider
+  - Implemented eSIM order creation, status tracking, and country listing
+  - Supports 200+ countries and regions coverage
+  - Added Airalo Cloud sharing links support
+  - Integrated with multi-provider orchestration system
+  - Configuration via VITE_AIRALO_API_KEY environment variable
+  - API Documentation: https://developers.partners.airalo.com/
+  - Partner Program: https://www.airalo.com/partner-with-us/api-partners
+- **Phase 1.1: eSIMAccess API Integration Update**
+  - Updated Redtea Mobile provider adapter with proper eSIMAccess API implementation
+  - Added authentication via Access Code (API Key) per eSIMAccess documentation
+  - Implemented API endpoints structure based on https://docs.esimaccess.com/
+  - Added proper error handling and response format handling
+  - Updated base URL to https://api.esimaccess.com/v1
+  - Added support for multiple response format variations
+  - Enhanced order creation with proper field mapping
+  - Improved country listing and coverage methods
+  - Added health check endpoint testing
+  - Provider can function as both primary (Tier 1) or backup (Tier 2) option
+  - Reference: eSIMAccess Partner API documentation
 - **Phase 1.1: Provider Orchestration System - Foundation Implementation**
   - Created provider orchestration architecture with Provider Manager service
   - Implemented base provider adapter class for unified interface

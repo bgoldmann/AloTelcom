@@ -21,20 +21,24 @@ export interface NetworkOperator {
 
 export interface Plan {
   id: string;
-  type: 'esim' | 'number' | 'vpn' | 'voip';
+  type: 'esim' | 'number' | 'vpn' | 'voip' | 'sms' | 'mms' | '2fa';
   country: string;
   region: string;
-  data: string; // Usage allowance (GB, Minutes, or "Unlimited")
+  data: string; // Usage allowance (GB, Minutes, Messages, Verifications, or "Unlimited")
   validity: string;
   price: number;
   flag: string;
   isPopular?: boolean;
-  features?: string[]; // Optional list of features for VPN/VOIP
+  features?: string[]; // Optional list of features for VPN/VOIP/SMS/MMS/2FA
   // New detailed fields
   description?: string;
   operators?: NetworkOperator[];
   coveredCountries?: string[];
   reviews?: Review[];
+  // Service-specific fields
+  phoneNumber?: string; // For SMS/MMS/2FA: destination phone number
+  fromNumber?: string; // For SMS/MMS: sender phone number
+  channel?: 'sms' | 'voice' | 'flash_call'; // For 2FA: verification channel
 }
 
 export interface User {

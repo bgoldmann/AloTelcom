@@ -5,7 +5,7 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE TYPE user_role AS ENUM ('admin', 'customer', 'support');
 CREATE TYPE user_status AS ENUM ('active', 'suspended');
 CREATE TYPE order_status AS ENUM ('active', 'expired', 'pending');
-CREATE TYPE product_type AS ENUM ('esim', 'number', 'vpn', 'voip');
+CREATE TYPE product_type AS ENUM ('esim', 'number', 'vpn', 'voip', 'sms', 'mms', '2fa');
 
 -- Users table (extends Supabase auth.users)
 CREATE TABLE IF NOT EXISTS public.users (

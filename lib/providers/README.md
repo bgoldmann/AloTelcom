@@ -8,6 +8,8 @@ Multi-provider orchestration system for AloTelcom platform. This system manages 
 ProviderManager (Orchestrator)
   ├─ RedteaMobileProvider (Tier 1 - Primary eSIM)
   ├─ TelnyxProvider (Tier 1 - Communication Services)
+  ├─ AiraloProvider (Tier 2 - Backup eSIM)
+  ├─ VPNProvider (Tier 1 - VPN Services)
   └─ eSIMGoProvider (Tier 2 - Backup eSIM) [Phase 3]
 ```
 
@@ -26,6 +28,17 @@ VITE_REDTEA_BASE_URL=https://api.esimaccess.com (optional)
 # Telnyx
 VITE_TELNYX_API_KEY=your_api_key_here
 VITE_TELNYX_BASE_URL=https://api.telnyx.com/v2 (optional)
+VITE_TELNYX_VERIFY_PROFILE_ID=your_verify_profile_id (optional, for 2FA)
+
+# Airalo (Partner API)
+VITE_AIRALO_API_KEY=your_api_key_here (optional)
+VITE_AIRALO_BASE_URL=https://api.partners.airalo.com/v1 (optional)
+
+# VPN Provider (Multiple providers supported)
+VITE_VPN_API_KEY=your_api_key_here (optional)
+VITE_VPN_API_SECRET=your_api_secret_here (optional)
+VITE_VPN_BASE_URL=https://api.vpn-provider.com/v1 (optional)
+VITE_VPN_PROVIDER=hideme (optional: hideme, resellvpn, fortisvpn, purevpn, worldvpn, generic)
 
 # eSIM Go (Phase 3)
 VITE_ESIMGO_API_KEY=your_api_key_here (optional)
@@ -76,12 +89,31 @@ if (result.providerResult.success) {
 }
 ```
 
+### Creating VPN Orders
+
+```typescript
+import { createVPNOrder } from './lib/providers/helpers';
+import type { Plan } from '../types';
+
+const result = await createVPNOrder(
+  userId,
+  plan,
+  customerEmail,
+  customerName
+);
+
+if (result.providerResult.success) {
+  console.log('VPN Account created:', result.providerResult.accountId);
+  console.log('Config URL:', result.providerResult.configUrl);
+}
+```
+
 ### Sending SMS (Telnyx)
 
 ```typescript
-import { providerManager } from './lib/providers';
+import { sendSMS } from './lib/providers';
 
-const result = await providerManager.sendSMS({
+const result = await sendSMS({
   to: '+1234567890',
   from: '+0987654321',
   message: 'Hello from AloTelcom!',
@@ -89,6 +121,54 @@ const result = await providerManager.sendSMS({
 
 if (result.success) {
   console.log('SMS sent:', result.messageId);
+}
+```
+
+### Sending MMS (Telnyx)
+
+```typescript
+import { sendMMS } from './lib/providers';
+
+const result = await sendMMS({
+  to: '+1234567890',
+  from: '+0987654321',
+  message: 'Check out this image!',
+  mediaUrls: ['https://example.com/image.jpg'],
+});
+
+if (result.success) {
+  console.log('MMS sent:', result.messageId);
+}
+```
+
+### Sending 2FA Verification Code (Telnyx)
+
+```typescript
+import { send2FACode, verify2FACode } from './lib/providers';
+
+// Send verification code via SMS
+const sendResult = await send2FACode(
+  '+1234567890',  // Phone number
+  'sms',          // Channel: 'sms', 'voice', or 'flash_call'
+  undefined,      // Optional: Verify Profile ID
+  300,            // Optional: Timeout in seconds
+  6               // Optional: Code length
+);
+
+if (sendResult.success) {
+  console.log('Verification code sent:', sendResult.verificationId);
+  console.log('Expires at:', sendResult.expiresAt);
+}
+
+// Verify the code
+const verifyResult = await verify2FACode(
+  '+1234567890',  // Phone number
+  '123456',       // Code entered by user
+  undefined       // Optional: Verify Profile ID
+);
+
+if (verifyResult.success && verifyResult.verified) {
+  console.log('Code verified successfully!');
 }
 ```
 
@@ -121,12 +201,35 @@ console.log('Reason:', recommendation.reason);
 - **Coverage**: 190+ countries
 - **Tier**: 1 (Primary)
 - **Features**:
-  - SMS/MMS messaging
-  - Virtual phone numbers
-  - VOIP/Voice API
-  - 2FA verification
-  - Video conferencing
-  - Programmable Fax
+  - ✅ SMS/MMS messaging (Implemented)
+  - ✅ Virtual phone numbers (Implemented)
+  - ✅ VOIP/Voice API (Implemented)
+  - ✅ 2FA verification (Implemented - SMS, Voice, Flash Call)
+  - ⏭️ Video conferencing (Available, not implemented)
+  - ⏭️ Programmable Fax (Available, not implemented)
+
+### Airalo (Backup eSIM Provider)
+
+- **Coverage**: 200+ countries and regions
+- **Tier**: 2 (Backup)
+- **Features**:
+  - eSIM order creation via Partner API
+  - QR code generation
+  - Cloud sharing links
+  - Package status tracking
+  - SDK support (Python, PHP)
+
+### VPN Provider (VPN Services)
+
+- **Coverage**: Global (60-200+ server locations)
+- **Tier**: 1 (Primary)
+- **Supported Providers**: hide.me, ResellVPN, FortisVPN, PureVPN, WorldVPN
+- **Features**:
+  - VPN account creation
+  - Account status tracking
+  - Account suspension/reactivation
+  - Server location listing
+  - Multi-provider support (configurable)
 
 ### eSIM Go (Backup eSIM Provider)
 

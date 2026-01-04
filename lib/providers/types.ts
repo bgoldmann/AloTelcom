@@ -5,8 +5,8 @@
  */
 
 // Provider Types
-export type ProviderName = 'redtea' | 'telnyx' | 'esimgo';
-export type ProviderType = 'esim' | 'communication';
+export type ProviderName = 'redtea' | 'telnyx' | 'airalo' | 'esimgo' | 'vpn';
+export type ProviderType = 'esim' | 'communication' | 'vpn';
 export type ProviderStatus = 'active' | 'inactive' | 'maintenance';
 export type ProviderTier = 1 | 2; // 1 = primary, 2 = backup
 
@@ -98,6 +98,36 @@ export interface PhoneNumber {
   features: string[];
 }
 
+// 2FA Verification Types
+export interface VerifyRequest {
+  phoneNumber: string;
+  verifyProfileId?: string; // Telnyx Verify Profile ID
+  channel?: 'sms' | 'voice' | 'flash_call';
+  timeout?: number; // Verification timeout in seconds
+  codeLength?: number; // Length of verification code (default: 6)
+}
+
+export interface VerifyResult {
+  success: boolean;
+  verificationId?: string;
+  expiresAt?: Date;
+  error?: string;
+  provider: ProviderName;
+}
+
+export interface VerifyCheck {
+  phoneNumber: string;
+  code: string;
+  verifyProfileId?: string;
+}
+
+export interface VerifyCheckResult {
+  success: boolean;
+  verified: boolean;
+  error?: string;
+  provider: ProviderName;
+}
+
 // Provider Interface
 export interface IProvider {
   name: ProviderName;
@@ -121,6 +151,17 @@ export interface IProvider {
   sendMMS?(message: SMSMessage): Promise<SMSResult>;
   createPhoneNumber?(config: PhoneNumberConfig): Promise<PhoneNumber>;
   listAvailableNumbers?(countryCode: string): Promise<PhoneNumber[]>;
+  
+  // 2FA Verification methods (if type === 'communication')
+  sendVerificationCode?(request: VerifyRequest): Promise<VerifyResult>;
+  verifyCode?(check: VerifyCheck): Promise<VerifyCheckResult>;
+  
+  // VPN methods (if type === 'vpn')
+  createVPNAccount?(order: VPNOrder): Promise<VPNOrderResult>;
+  getAccountStatus?(accountId: string): Promise<VPNAccountStatus | null>;
+  suspendAccount?(accountId: string): Promise<boolean>;
+  reactivateAccount?(accountId: string): Promise<boolean>;
+  listServerLocations?(): Promise<string[]>;
 }
 
 // Provider Selection Criteria
@@ -154,6 +195,8 @@ export interface ProviderMetrics {
   errorRate: number;
 }
 
+// VPN Order Types
+
 // Webhook Event Types
 export type WebhookEventType = 
   | 'order.created'
@@ -162,7 +205,15 @@ export type WebhookEventType =
   | 'order.cancelled'
   | 'sms.sent'
   | 'sms.failed'
-  | 'number.provisioned';
+  | 'mms.sent'
+  | 'mms.failed'
+  | 'number.provisioned'
+  | 'vpn.account.created'
+  | 'vpn.account.suspended'
+  | 'vpn.account.expired'
+  | 'verify.code.sent'
+  | 'verify.code.verified'
+  | 'verify.code.failed';
 
 export interface WebhookEvent {
   provider: ProviderName;

@@ -136,6 +136,8 @@ CREATE POLICY "System can manage webhooks"
 INSERT INTO public.providers (name, type, tier, status) VALUES
   ('redtea', 'esim', 1, 'inactive'),
   ('telnyx', 'communication', 1, 'inactive'),
+  ('airalo', 'esim', 2, 'inactive'),
+  ('vpn', 'vpn', 1, 'inactive'),
   ('esimgo', 'esim', 2, 'inactive')
 ON CONFLICT (name) DO NOTHING;
 

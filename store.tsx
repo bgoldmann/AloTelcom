@@ -232,11 +232,103 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     setCart(null);
   };
 
-  const addOrder = async (plan: Plan, imei?: string, deviceModel?: string) => {
+  const addOrder = async (plan: Plan, imei?: string, deviceModel?: string, additionalData?: {
+    email?: string;
+    name?: string;
+    phoneNumber?: string;
+    fromNumber?: string;
+    mediaUrls?: string[];
+    channel?: 'sms' | 'voice' | 'flash_call';
+  }) => {
     if (!user) return;
     
     try {
-      const newOrder = await createOrderDb(user.id, plan, imei, deviceModel);
+      // Import provider helpers dynamically to avoid circular dependencies
+      const { 
+        createProviderOrder, 
+        createVPNOrder, 
+        createSMSOrder, 
+        createMMSOrder, 
+        create2FAOrder 
+      } = await import('./lib/providers/helpers');
+      
+      const customerEmail = additionalData?.email || user.email;
+      const customerName = additionalData?.name || user.name;
+
+      let newOrder;
+      
+      // Route to appropriate provider based on plan type
+      switch (plan.type) {
+        case 'esim':
+          // Use provider orchestration for eSIM orders
+          const esimResult = await createProviderOrder(
+            user.id,
+            plan,
+            customerEmail,
+            customerName,
+            imei,
+            deviceModel
+          );
+          newOrder = esimResult.order;
+          break;
+          
+        case 'vpn':
+          // Use VPN provider for VPN orders
+          const vpnResult = await createVPNOrder(
+            user.id,
+            plan,
+            customerEmail,
+            customerName
+          );
+          newOrder = vpnResult.order;
+          break;
+          
+        case 'sms':
+          // Use Telnyx for SMS orders
+          const smsResult = await createSMSOrder(
+            user.id,
+            plan,
+            customerEmail,
+            customerName,
+            additionalData?.phoneNumber,
+            additionalData?.fromNumber
+          );
+          newOrder = smsResult.order;
+          break;
+          
+        case 'mms':
+          // Use Telnyx for MMS orders
+          const mmsResult = await createMMSOrder(
+            user.id,
+            plan,
+            customerEmail,
+            customerName,
+            additionalData?.phoneNumber,
+            additionalData?.fromNumber,
+            additionalData?.mediaUrls
+          );
+          newOrder = mmsResult.order;
+          break;
+          
+        case '2fa':
+          // Use Telnyx for 2FA orders
+          const twoFAResult = await create2FAOrder(
+            user.id,
+            plan,
+            customerEmail,
+            customerName,
+            additionalData?.phoneNumber,
+            additionalData?.channel
+          );
+          newOrder = twoFAResult.order;
+          break;
+          
+        default:
+          // Fallback to standard order creation for other types (number, voip)
+          newOrder = await createOrderDb(user.id, plan, imei, deviceModel);
+          break;
+      }
+      
       if (newOrder) {
         setOrders(prev => [newOrder, ...prev]);
         if (user.role === 'admin') {
