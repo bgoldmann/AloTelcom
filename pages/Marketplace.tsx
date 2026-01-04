@@ -6,6 +6,22 @@ import { Search, X, Zap, Globe, Signal, ChevronLeft, Map, Phone, Shield, Mic, Ch
 import { Plan, Review } from '../types';
 import { useApp } from '../store';
 
+// Helper function to create dynamic styles for animations
+const createAnimationStyle = (delay: number): React.CSSProperties => ({
+  '--animation-delay': `${delay}ms`,
+  animationDelay: 'var(--animation-delay)',
+} as React.CSSProperties);
+
+// Helper function to create tab indicator styles
+const createTabIndicatorStyle = (tab: 'local' | 'regional' | 'global'): React.CSSProperties => ({
+  '--tab-indicator-left': tab === 'local' ? '6px' : tab === 'regional' ? '33.33%' : '66.66%',
+  '--tab-indicator-width': 'calc(33.33% - 4px)',
+  '--tab-indicator-transform': tab === 'regional' ? 'translateX(2px)' : tab === 'global' ? 'translateX(-2px)' : 'none',
+  left: 'var(--tab-indicator-left)',
+  width: 'var(--tab-indicator-width)',
+  transform: 'var(--tab-indicator-transform)',
+} as React.CSSProperties);
+
 // --- MOCK DATA GENERATORS ---
 
 const MOCK_REVIEWS: Review[] = [
@@ -331,14 +347,7 @@ const Marketplace: React.FC = () => {
                 <div className="bg-gray-100 dark:bg-stone-800 p-1.5 rounded-full inline-flex relative shadow-inner">
                    <div 
                      className="absolute top-1.5 bottom-1.5 bg-white dark:bg-stone-700 rounded-full shadow-md transition-all duration-300 ease-out z-0"
-                     style={{
-                       '--tab-indicator-left': esimTab === 'local' ? '6px' : esimTab === 'regional' ? '33.33%' : '66.66%',
-                       '--tab-indicator-width': 'calc(33.33% - 4px)',
-                       '--tab-indicator-transform': esimTab === 'regional' ? 'translateX(2px)' : esimTab === 'global' ? 'translateX(-2px)' : 'none',
-                       left: 'var(--tab-indicator-left)',
-                       width: 'var(--tab-indicator-width)',
-                       transform: 'var(--tab-indicator-transform)',
-                     } as React.CSSProperties}
+                     style={createTabIndicatorStyle(esimTab)}
                    ></div>
                    {(['local', 'regional', 'global'] as const).map(tab => (
                      <button
@@ -399,7 +408,7 @@ const Marketplace: React.FC = () => {
                       key={idx}
                       onClick={() => handleCountryClick(name)}
                       className="bg-white dark:bg-stone-900 p-5 rounded-3xl border border-gray-100 dark:border-stone-800 shadow-sm hover:shadow-xl hover:border-pars-cta/20 transition-all duration-300 group text-left flex flex-col h-full animate-fade-in hover:-translate-y-1"
-                      style={{ '--animation-delay': `${idx * 30}ms`, animationDelay: 'var(--animation-delay)' } as React.CSSProperties}
+                      style={createAnimationStyle(idx * 30)}
                       aria-label={`Browse ${name} plans`}
                       title={`View plans for ${name}`}
                     >
@@ -453,7 +462,7 @@ const PlanCard: React.FC<PlanCardProps> = ({ plan, onDetails, delay }) => {
   return (
     <div 
       className="bg-white dark:bg-stone-900 rounded-3xl p-6 shadow-sm border border-gray-100 dark:border-stone-800 hover:shadow-2xl hover:border-orange-100 dark:hover:border-stone-700 hover:-translate-y-2 transition-all duration-300 relative overflow-hidden group h-full flex flex-col"
-      style={{ '--card-delay': `${delay * 50}ms`, animationDelay: 'var(--card-delay)' } as React.CSSProperties}
+      style={createAnimationStyle(delay * 50)}
     >
         {plan.isPopular && (
           <div className="absolute top-0 right-0 bg-gradient-to-r from-pars-accent to-orange-400 text-white text-[10px] font-bold px-4 py-1.5 rounded-bl-2xl shadow-sm z-10 uppercase tracking-wider">
