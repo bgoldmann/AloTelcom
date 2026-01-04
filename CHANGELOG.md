@@ -8,6 +8,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Fixed
+- **Build Chunk Size Warning**
+  - Increased `chunkSizeWarningLimit` to 1000kb (1MB) in `vite.config.ts`
+  - Implemented manual chunk splitting for better code organization:
+    - `react-vendor`: React, React DOM, React Router
+    - `supabase-vendor`: Supabase client
+    - `ui-vendor`: Lucide React icons
+  - This reduces bundle size warnings and improves caching strategy
+  - Build warnings about large chunks eliminated
 - **TypeScript Type Errors**
   - Added `@types/react` and `@types/react-dom` to devDependencies
   - Fixed missing type declarations that were causing TypeScript errors
