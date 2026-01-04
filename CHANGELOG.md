@@ -8,6 +8,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Fixed
+- **Remaining Linter Warnings**
+  - Converted inline styles to CSS custom properties for dynamic animation delays
+  - Added proper accessibility attributes (aria-label, title) to all buttons
+  - Added keyboard navigation support (Enter/Space) to clickable div elements
+  - Improved accessibility for screen readers and keyboard users
+  - All buttons now have discernible text for assistive technologies
+  - Files updated:
+    - `pages/Marketplace.tsx` - Fixed inline styles and accessibility issues
 - **Missing SMS/MMS/2FA Order Functions**
   - Added missing `createSMSOrder`, `createMMSOrder`, and `create2FAOrder` functions to `lib/providers/helpers.ts`
   - These functions were referenced in `store.tsx` but were missing from the helpers file

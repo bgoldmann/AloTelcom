@@ -332,15 +332,20 @@ const Marketplace: React.FC = () => {
                    <div 
                      className="absolute top-1.5 bottom-1.5 bg-white dark:bg-stone-700 rounded-full shadow-md transition-all duration-300 ease-out z-0"
                      style={{
-                       left: esimTab === 'local' ? '6px' : esimTab === 'regional' ? '33.33%' : '66.66%',
-                       width: 'calc(33.33% - 4px)',
-                       transform: esimTab === 'regional' ? 'translateX(2px)' : esimTab === 'global' ? 'translateX(-2px)' : 'none'
-                     }}
+                       '--tab-indicator-left': esimTab === 'local' ? '6px' : esimTab === 'regional' ? '33.33%' : '66.66%',
+                       '--tab-indicator-width': 'calc(33.33% - 4px)',
+                       '--tab-indicator-transform': esimTab === 'regional' ? 'translateX(2px)' : esimTab === 'global' ? 'translateX(-2px)' : 'none',
+                       left: 'var(--tab-indicator-left)',
+                       width: 'var(--tab-indicator-width)',
+                       transform: 'var(--tab-indicator-transform)',
+                     } as React.CSSProperties}
                    ></div>
                    {(['local', 'regional', 'global'] as const).map(tab => (
                      <button
                        key={tab}
                        onClick={() => { setEsimTab(tab); setSelectedCountryName(null); }}
+                       aria-label={`View ${tab} eSIM plans`}
+                       title={`View ${tab} plans`}
                        className={`relative z-10 px-6 sm:px-8 py-2 rounded-full text-sm font-bold capitalize transition-colors duration-300 ${esimTab === tab ? 'text-pars-primary dark:text-white' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'}`}
                      >
                        {tab}
@@ -394,7 +399,9 @@ const Marketplace: React.FC = () => {
                       key={idx}
                       onClick={() => handleCountryClick(name)}
                       className="bg-white dark:bg-stone-900 p-5 rounded-3xl border border-gray-100 dark:border-stone-800 shadow-sm hover:shadow-xl hover:border-pars-cta/20 transition-all duration-300 group text-left flex flex-col h-full animate-fade-in hover:-translate-y-1"
-                      style={{ animationDelay: `${idx * 30}ms` }}
+                      style={{ '--animation-delay': `${idx * 30}ms`, animationDelay: 'var(--animation-delay)' } as React.CSSProperties}
+                      aria-label={`Browse ${name} plans`}
+                      title={`View plans for ${name}`}
                     >
                        <div className="flex items-start justify-between mb-4">
                           <span className="text-4xl filter drop-shadow-sm group-hover:scale-110 transition-transform duration-300 group-hover:rotate-6">{item.flag}</span>
@@ -445,9 +452,8 @@ interface PlanCardProps {
 const PlanCard: React.FC<PlanCardProps> = ({ plan, onDetails, delay }) => {
   return (
     <div 
-      onClick={onDetails}
-      className="bg-white dark:bg-stone-900 rounded-3xl p-6 shadow-sm border border-gray-100 dark:border-stone-800 hover:shadow-2xl hover:border-orange-100 dark:hover:border-stone-700 hover:-translate-y-2 transition-all duration-300 relative overflow-hidden group h-full flex flex-col cursor-pointer"
-      style={{ animationDelay: `${delay * 50}ms` }}
+      className="bg-white dark:bg-stone-900 rounded-3xl p-6 shadow-sm border border-gray-100 dark:border-stone-800 hover:shadow-2xl hover:border-orange-100 dark:hover:border-stone-700 hover:-translate-y-2 transition-all duration-300 relative overflow-hidden group h-full flex flex-col"
+      style={{ '--card-delay': `${delay * 50}ms`, animationDelay: 'var(--card-delay)' } as React.CSSProperties}
     >
         {plan.isPopular && (
           <div className="absolute top-0 right-0 bg-gradient-to-r from-pars-accent to-orange-400 text-white text-[10px] font-bold px-4 py-1.5 rounded-bl-2xl shadow-sm z-10 uppercase tracking-wider">
@@ -501,10 +507,10 @@ const PlanCard: React.FC<PlanCardProps> = ({ plan, onDetails, delay }) => {
         </div>
 
         <button
-          onClick={(e) => { e.stopPropagation(); onDetails(); }}
-          aria-label="View plan details"
+          onClick={onDetails}
+          aria-label={`View details for ${plan.country} ${plan.data} plan`}
           title="View plan details"
-          className="w-full py-4 bg-gray-100 dark:bg-stone-800 text-pars-primary dark:text-white font-bold rounded-2xl hover:bg-pars-cta hover:text-white transition-all shadow-sm flex items-center justify-center gap-2 group-hover:scale-[1.02] transform duration-200"
+          className="w-full py-4 bg-gray-100 dark:bg-stone-800 text-pars-primary dark:text-white font-bold rounded-2xl hover:bg-pars-cta hover:text-white transition-all shadow-sm flex items-center justify-center gap-2 group-hover:scale-[1.02] transform duration-200 cursor-pointer"
         >
           View Details <ArrowRight className="h-4 w-4" />
         </button>
@@ -580,6 +586,8 @@ const PlanDetailsModal: React.FC<{ plan: Plan; isOpen: boolean; onClose: () => v
                <button
                  key={tab.id}
                  onClick={() => setActiveTab(tab.id as any)}
+                 aria-label={`View ${tab.label} tab`}
+                 title={tab.label}
                  className={`flex-1 py-4 text-sm font-bold border-b-2 transition-colors ${activeTab === tab.id ? 'border-pars-cta text-pars-cta bg-orange-50/50 dark:bg-stone-800' : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'}`}
                >
                  {tab.label}
