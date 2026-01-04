@@ -161,6 +161,7 @@ export class ProviderManager {
       return {
         success: false,
         error: error?.message || 'Failed to select provider',
+        provider: criteria.service === 'esim' ? 'redtea' : criteria.service === 'communication' ? 'telnyx' : 'vpn',
       };
     }
   }
@@ -176,6 +177,7 @@ export class ProviderManager {
       return {
         success: false,
         error: 'SMS service not available (Telnyx not configured)',
+        provider: 'telnyx',
       };
     }
 
@@ -201,6 +203,7 @@ export class ProviderManager {
       return {
         success: false,
         error: 'MMS service not available (Telnyx not configured)',
+        provider: 'telnyx',
       };
     }
 

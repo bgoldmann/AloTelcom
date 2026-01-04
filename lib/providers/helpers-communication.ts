@@ -23,6 +23,7 @@ export async function sendSMS(message: SMSMessage): Promise<SMSResult> {
     return {
       success: false,
       error: 'SMS service not available (Telnyx not configured)',
+      provider: 'telnyx',
     };
   }
 
@@ -47,6 +48,7 @@ export async function sendMMS(message: SMSMessage): Promise<SMSResult> {
     return {
       success: false,
       error: 'MMS service not available (Telnyx not configured)',
+      provider: 'telnyx',
     };
   }
 

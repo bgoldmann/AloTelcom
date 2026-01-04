@@ -187,12 +187,126 @@ export interface Database {
           updated_at?: string
         }
       }
+      blog_posts: {
+        Row: {
+          id: string
+          title: string
+          slug: string
+          excerpt: string
+          content: string
+          author_id: string | null
+          author_name: string
+          author_avatar: string | null
+          published_at: string | null
+          updated_at: string | null
+          category: string
+          tags: string[]
+          image_url: string | null
+          read_time: number
+          featured: boolean
+          published: boolean
+          views: number
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          title: string
+          slug: string
+          excerpt: string
+          content: string
+          author_id?: string | null
+          author_name?: string
+          author_avatar?: string | null
+          published_at?: string | null
+          updated_at?: string | null
+          category?: string
+          tags?: string[]
+          image_url?: string | null
+          read_time?: number
+          featured?: boolean
+          published?: boolean
+          views?: number
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          title?: string
+          slug?: string
+          excerpt?: string
+          content?: string
+          author_id?: string | null
+          author_name?: string
+          author_avatar?: string | null
+          published_at?: string | null
+          updated_at?: string | null
+          category?: string
+          tags?: string[]
+          image_url?: string | null
+          read_time?: number
+          featured?: boolean
+          published?: boolean
+          views?: number
+          created_at?: string
+        }
+      }
+      countries: {
+        Row: {
+          id: string
+          name: string
+          slug: string
+          flag: string
+          description: string
+          network_operators: string[]
+          coverage_areas: string[]
+          popular_plans: Json | null
+          seo_title: string | null
+          seo_description: string | null
+          seo_keywords: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          name: string
+          slug: string
+          flag: string
+          description: string
+          network_operators?: string[]
+          coverage_areas?: string[]
+          popular_plans?: Json | null
+          seo_title?: string | null
+          seo_description?: string | null
+          seo_keywords?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          name?: string
+          slug?: string
+          flag?: string
+          description?: string
+          network_operators?: string[]
+          coverage_areas?: string[]
+          popular_plans?: Json | null
+          seo_title?: string | null
+          seo_description?: string | null
+          seo_keywords?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      increment_blog_post_views: {
+        Args: {
+          post_id: string
+        }
+        Returns: void
+      }
     }
     Enums: {
       user_role: 'admin' | 'customer' | 'support'

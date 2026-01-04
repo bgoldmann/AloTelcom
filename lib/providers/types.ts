@@ -133,6 +133,7 @@ export interface IProvider {
   name: ProviderName;
   type: ProviderType;
   tier: ProviderTier;
+  initialized?: boolean; // Optional - tracks if provider has been initialized
   
   // Common methods
   initialize(config: ProviderConfig): Promise<void>;
@@ -162,6 +163,37 @@ export interface IProvider {
   suspendAccount?(accountId: string): Promise<boolean>;
   reactivateAccount?(accountId: string): Promise<boolean>;
   listServerLocations?(): Promise<string[]>;
+}
+
+// VPN Order Types
+export interface VPNOrder {
+  planType: string;
+  planId: string;
+  validity: string;
+  devices: number;
+  customerEmail: string;
+  customerName?: string;
+}
+
+export interface VPNOrderResult {
+  success: boolean;
+  orderId?: string;
+  providerOrderId?: string;
+  accountId?: string;
+  username?: string;
+  password?: string;
+  configUrl?: string;
+  activationLink?: string;
+  error?: string;
+  provider: ProviderName;
+}
+
+export interface VPNAccountStatus {
+  accountId: string;
+  status: 'active' | 'suspended' | 'expired' | 'cancelled';
+  expiryDate?: Date;
+  devices?: number;
+  lastActivity?: Date;
 }
 
 // Provider Selection Criteria

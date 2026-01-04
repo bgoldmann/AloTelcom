@@ -113,6 +113,9 @@ export async function createVPNOrder(
   }
 
   // Create VPN account
+  if (!vpnProvider.createVPNAccount) {
+    throw new Error('VPN provider does not support account creation');
+  }
   const providerResult = await vpnProvider.createVPNAccount(vpnOrder);
 
   // Update database order with provider information

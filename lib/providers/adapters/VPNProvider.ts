@@ -89,7 +89,7 @@ export class VPNProvider extends BaseProvider {
         headers['Authorization'] = `Bearer ${this.config.apiKey}`;
         break;
       case 'resellvpn':
-        headers['X-API-Key'] = this.config.apiKey;
+        headers['X-API-Key'] = this.config.apiKey || '';
         if (this.config.apiSecret) {
           headers['X-API-Secret'] = this.config.apiSecret;
         }
@@ -197,6 +197,7 @@ export class VPNProvider extends BaseProvider {
       // Handle different possible response formats
       const providerOrderId = response.orderId || response.accountId || `VPN-${Date.now()}`;
       const accountId = response.accountId || response.orderId;
+      const username = response.username;
       const configUrl = response.configUrl || response.downloadUrl;
       const activationLink = response.activationLink;
 

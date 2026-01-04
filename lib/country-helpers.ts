@@ -1,4 +1,7 @@
 import { supabase } from './supabase';
+import type { Database } from './database.types';
+
+type DbCountry = Database['public']['Tables']['countries']['Row'];
 
 export interface CountryInfo {
   id: string;
@@ -32,7 +35,7 @@ export const fetchCountries = async (): Promise<CountryInfo[]> => {
     return [];
   }
 
-  return (data || []).map((country) => ({
+  return (data || []).map((country: DbCountry) => ({
     id: country.id,
     name: country.name,
     slug: country.slug,
@@ -62,18 +65,19 @@ export const fetchCountryBySlug = async (slug: string): Promise<CountryInfo | nu
 
   if (!data) return null;
 
+  const country: DbCountry = data;
   return {
-    id: data.id,
-    name: data.name,
-    slug: data.slug,
-    flag: data.flag,
-    description: data.description,
-    networkOperators: data.network_operators || [],
-    coverage: data.coverage_areas || [],
-    popularPlans: data.popular_plans ? JSON.parse(JSON.stringify(data.popular_plans)) : undefined,
-    seoTitle: data.seo_title || undefined,
-    seoDescription: data.seo_description || undefined,
-    seoKeywords: data.seo_keywords || undefined,
+    id: country.id,
+    name: country.name,
+    slug: country.slug,
+    flag: country.flag,
+    description: country.description,
+    networkOperators: country.network_operators || [],
+    coverage: country.coverage_areas || [],
+    popularPlans: country.popular_plans ? JSON.parse(JSON.stringify(country.popular_plans)) : undefined,
+    seoTitle: country.seo_title || undefined,
+    seoDescription: country.seo_description || undefined,
+    seoKeywords: country.seo_keywords || undefined,
   };
 };
 
