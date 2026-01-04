@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- **Build Error: Async/Await in Filter Callback**
+  - Fixed TypeScript build error in `ProviderManager.ts` where `await` was used inside a `.filter()` callback
+  - Refactored `selectProvider()` method to properly handle async availability checks using `Promise.all()`
+  - Build now succeeds on Vercel deployment
+
 ### Added
 - **SMS/MMS/2FA Order System Integration**
   - Integrated SMS, MMS, and 2FA services into the existing order system

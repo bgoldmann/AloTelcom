@@ -41,10 +41,23 @@ export class ProviderManager {
   async selectProvider(criteria: ProviderSelectionCriteria): Promise<ProviderSelectionResult> {
     const { service, countryCode, prioritizeCost, prioritizePerformance, requireBackup } = criteria;
 
-    // Filter providers by service type
-    const candidateProviders = Array.from(this.providers.values()).filter(
-      p => p.type === service && (await p.isAvailable())
+    // First filter providers by service type (synchronous)
+    const providersByType = Array.from(this.providers.values()).filter(
+      p => p.type === service
     );
+
+    // Then check availability asynchronously
+    const availabilityChecks = await Promise.all(
+      providersByType.map(async (p) => ({
+        provider: p,
+        available: await p.isAvailable(),
+      }))
+    );
+
+    // Filter to only available providers
+    const candidateProviders = availabilityChecks
+      .filter(check => check.available)
+      .map(check => check.provider);
 
     if (candidateProviders.length === 0) {
       throw new Error(`No available providers for service: ${service}`);
