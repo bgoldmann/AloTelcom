@@ -1,0 +1,11 @@
+User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /api/
+Disallow: /checkout/
+Disallow: /dashboard/
+Disallow: /profile/
+Disallow: /*.json$
+
+Sitemap: https://alotelcom.com/sitemap.xml
+
