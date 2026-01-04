@@ -393,11 +393,18 @@ const Marketplace: React.FC = () => {
         />
       )}
     </div>
+    </>
   );
 };
 
 // Reusable Plan Card Component
-const PlanCard: React.FC<{ plan: Plan, onDetails: () => void, delay: number }> = ({ plan, onDetails, delay }) => {
+interface PlanCardProps {
+  plan: Plan;
+  onDetails: () => void;
+  delay: number;
+}
+
+const PlanCard: React.FC<PlanCardProps> = ({ plan, onDetails, delay }) => {
   return (
     <div 
       onClick={onDetails}

@@ -311,6 +311,7 @@ const Home: React.FC = () => {
          <div className="flex items-center gap-2 text-white"> <Check /> <Star /> </div>
       </div>
     </div>
+    </>
   );
 };
 
