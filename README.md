@@ -46,9 +46,13 @@ Then edit `.env.local` with your actual values:
 VITE_SUPABASE_URL=your_supabase_project_url
 VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
 VITE_GEMINI_API_KEY=your_gemini_api_key
+
+# Provider Integration (Optional - Phase 1)
+VITE_REDTEA_API_KEY=your_redtea_api_key
+VITE_TELNYX_API_KEY=your_telnyx_api_key
 ```
 
-**Note**: See `.env.example` for all available configuration options.
+**Note**: See `.env.example` for all available configuration options. Provider integration requires running `supabase/provider_schema.sql` migration.
 
 ### 4. Run Locally
 
@@ -86,6 +90,7 @@ See [MIGRATION_GUIDE.md](./MIGRATION_GUIDE.md) for detailed setup instructions.
 ├── components/       # React components
 ├── pages/           # Page components
 ├── lib/             # Utilities (Supabase client, helpers)
+│   └── providers/   # Multi-provider orchestration system
 ├── services/        # External service integrations
 ├── supabase/        # Database schema and seeds
 ├── types.ts         # TypeScript type definitions
@@ -103,12 +108,15 @@ See [MIGRATION_GUIDE.md](./MIGRATION_GUIDE.md) for detailed setup instructions.
 - ✅ AI chat assistant (Gemini)
 - ✅ Dark mode
 - ✅ Responsive design
+- ✅ Multi-provider orchestration (Phase 1 - Redtea Mobile, Telnyx)
 
 ## Documentation
 
 - [PRD.md](./PRD.md) - Product Requirements Document
 - [MIGRATION_GUIDE.md](./MIGRATION_GUIDE.md) - Supabase + Vercel setup guide
 - [CHANGELOG.md](./CHANGELOG.md) - Version history
+- [INTEGRATION_IMPLEMENTATION_PLAN.md](./INTEGRATION_IMPLEMENTATION_PLAN.md) - Multi-provider integration plan
+- [lib/providers/README.md](./lib/providers/README.md) - Provider system documentation
 
 ## License
 

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { SEO } from '../lib/seo';
-import { BreadcrumbSchemaScript } from '../lib/schema';
+import { BreadcrumbSchemaScript, ProductSchemaScript } from '../lib/schema';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Search, X, Zap, Globe, Signal, ChevronLeft, Map, Phone, Shield, Mic, CheckCircle, ArrowRight, Info, Star, Share2, Wifi } from 'lucide-react';
 import { Plan, Review } from '../types';
@@ -26,6 +26,35 @@ const generateLocalPlans = (): Plan[] => {
     { name: 'Spain', flag: '🇪🇸', region: 'Europe', id: 'es', networks: [{name: 'Movistar', type: '5G'}, {name: 'Orange', type: 'LTE'}] },
     { name: 'Canada', flag: '🇨🇦', region: 'Americas', id: 'ca', networks: [{name: 'Rogers', type: '5G'}, {name: 'Bell', type: 'LTE'}] },
     { name: 'Thailand', flag: '🇹🇭', region: 'Asia', id: 'th', networks: [{name: 'AIS', type: '5G'}, {name: 'DTAC', type: 'LTE'}] },
+    { name: 'Australia', flag: '🇦🇺', region: 'Oceania', id: 'au', networks: [{name: 'Telstra', type: '5G'}, {name: 'Optus', type: '5G'}] },
+    { name: 'Singapore', flag: '🇸🇬', region: 'Asia', id: 'sg', networks: [{name: 'Singtel', type: '5G'}, {name: 'StarHub', type: '5G'}] },
+    { name: 'South Korea', flag: '🇰🇷', region: 'Asia', id: 'kr', networks: [{name: 'SK Telecom', type: '5G'}, {name: 'KT', type: '5G'}] },
+    { name: 'India', flag: '🇮🇳', region: 'Asia', id: 'in', networks: [{name: 'Jio', type: '5G'}, {name: 'Airtel', type: '4G'}] },
+    { name: 'China', flag: '🇨🇳', region: 'Asia', id: 'cn', networks: [{name: 'China Mobile', type: '5G'}, {name: 'China Unicom', type: '4G'}] },
+    { name: 'Netherlands', flag: '🇳🇱', region: 'Europe', id: 'nl', networks: [{name: 'KPN', type: '5G'}, {name: 'Vodafone', type: '5G'}] },
+    { name: 'Switzerland', flag: '🇨🇭', region: 'Europe', id: 'ch', networks: [{name: 'Swisscom', type: '5G'}, {name: 'Sunrise', type: '5G'}] },
+    { name: 'Austria', flag: '🇦🇹', region: 'Europe', id: 'at', networks: [{name: 'A1', type: '5G'}, {name: 'T-Mobile', type: '4G'}] },
+    { name: 'Belgium', flag: '🇧🇪', region: 'Europe', id: 'be', networks: [{name: 'Proximus', type: '5G'}, {name: 'Orange', type: '4G'}] },
+    { name: 'Portugal', flag: '🇵🇹', region: 'Europe', id: 'pt', networks: [{name: 'MEO', type: '5G'}, {name: 'Vodafone', type: '4G'}] },
+    { name: 'Greece', flag: '🇬🇷', region: 'Europe', id: 'gr', networks: [{name: 'Cosmote', type: '5G'}, {name: 'Vodafone', type: '4G'}] },
+    { name: 'Poland', flag: '🇵🇱', region: 'Europe', id: 'pl', networks: [{name: 'Orange', type: '5G'}, {name: 'Play', type: '4G'}] },
+    { name: 'Czech Republic', flag: '🇨🇿', region: 'Europe', id: 'cz', networks: [{name: 'O2', type: '5G'}, {name: 'T-Mobile', type: '4G'}] },
+    { name: 'UAE', flag: '🇦🇪', region: 'Middle East', id: 'ae', networks: [{name: 'Etisalat', type: '5G'}, {name: 'du', type: '5G'}] },
+    { name: 'Saudi Arabia', flag: '🇸🇦', region: 'Middle East', id: 'sa', networks: [{name: 'STC', type: '5G'}, {name: 'Zain', type: '4G'}] },
+    { name: 'Israel', flag: '🇮🇱', region: 'Middle East', id: 'il', networks: [{name: 'Partner', type: '5G'}, {name: 'Cellcom', type: '4G'}] },
+    { name: 'Egypt', flag: '🇪🇬', region: 'Middle East', id: 'eg', networks: [{name: 'Orange', type: '4G'}, {name: 'Vodafone', type: '4G'}] },
+    { name: 'South Africa', flag: '🇿🇦', region: 'Africa', id: 'za', networks: [{name: 'Vodacom', type: '5G'}, {name: 'MTN', type: '4G'}] },
+    { name: 'Mexico', flag: '🇲🇽', region: 'Americas', id: 'mx', networks: [{name: 'Telcel', type: '5G'}, {name: 'Movistar', type: '4G'}] },
+    { name: 'Brazil', flag: '🇧🇷', region: 'Americas', id: 'br', networks: [{name: 'Vivo', type: '5G'}, {name: 'Claro', type: '4G'}] },
+    { name: 'Argentina', flag: '🇦🇷', region: 'Americas', id: 'ar', networks: [{name: 'Movistar', type: '5G'}, {name: 'Claro', type: '4G'}] },
+    { name: 'Chile', flag: '🇨🇱', region: 'Americas', id: 'cl', networks: [{name: 'Entel', type: '5G'}, {name: 'Movistar', type: '4G'}] },
+    { name: 'New Zealand', flag: '🇳🇿', region: 'Oceania', id: 'nz', networks: [{name: 'Spark', type: '5G'}, {name: 'Vodafone', type: '4G'}] },
+    { name: 'Indonesia', flag: '🇮🇩', region: 'Asia', id: 'id', networks: [{name: 'Telkomsel', type: '5G'}, {name: 'Indosat', type: '4G'}] },
+    { name: 'Malaysia', flag: '🇲🇾', region: 'Asia', id: 'my', networks: [{name: 'Maxis', type: '5G'}, {name: 'Celcom', type: '4G'}] },
+    { name: 'Philippines', flag: '🇵🇭', region: 'Asia', id: 'ph', networks: [{name: 'Globe', type: '5G'}, {name: 'Smart', type: '4G'}] },
+    { name: 'Vietnam', flag: '🇻🇳', region: 'Asia', id: 'vn', networks: [{name: 'Viettel', type: '5G'}, {name: 'Vinaphone', type: '4G'}] },
+    { name: 'Hong Kong', flag: '🇭🇰', region: 'Asia', id: 'hk', networks: [{name: 'CSL', type: '5G'}, {name: '3', type: '5G'}] },
+    { name: 'Taiwan', flag: '🇹🇼', region: 'Asia', id: 'tw', networks: [{name: 'Chunghwa', type: '5G'}, {name: 'FarEasTone', type: '5G'}] },
   ];
 
   const plans: Plan[] = [];
@@ -419,7 +448,7 @@ const PlanCard: React.FC<PlanCardProps> = ({ plan, onDetails, delay }) => {
         
         <div className="flex justify-between items-start mb-6">
           <div className="flex items-start gap-3">
-             {plan.type !== 'esim' && <span className="text-4xl">{plan.flag}</span>}
+             {plan.type !== 'esim' && <span className="text-4xl">{plan.flag || '🌐'}</span>}
              <div>
                <div className="text-2xl font-extrabold text-pars-primary dark:text-white mb-1 tracking-tight">
                  {plan.data}
@@ -513,7 +542,7 @@ const PlanDetailsModal: React.FC<{ plan: Plan; isOpen: boolean; onClose: () => v
           <div className="p-6 border-b border-gray-100 dark:border-stone-800 flex justify-between items-start bg-gray-50 dark:bg-stone-950">
              <div className="flex items-center gap-4">
                 <div className="text-5xl shadow-sm rounded-2xl bg-white dark:bg-stone-800 w-20 h-20 flex items-center justify-center">
-                   {plan.flag}
+                   {plan.flag || '🌐'}
                 </div>
                 <div>
                    <h2 className="text-2xl font-extrabold text-gray-900 dark:text-white">{plan.country}</h2>
@@ -591,10 +620,10 @@ const PlanDetailsModal: React.FC<{ plan: Plan; isOpen: boolean; onClose: () => v
                                    <div className="p-2 bg-gray-100 dark:bg-stone-800 rounded-lg">
                                       <Signal className="h-5 w-5 text-gray-600 dark:text-gray-300" />
                                    </div>
-                                   <span className="font-bold text-gray-900 dark:text-white">{op.name}</span>
+                                   <span className="font-bold text-gray-900 dark:text-white">{op?.name || 'Unknown Network'}</span>
                                 </div>
-                                <span className={`px-3 py-1 rounded-full text-xs font-bold ${op.type === '5G' ? 'bg-indigo-100 text-indigo-700' : 'bg-gray-100 text-gray-700'}`}>
-                                   {op.type}
+                                <span className={`px-3 py-1 rounded-full text-xs font-bold ${op?.type === '5G' ? 'bg-indigo-100 text-indigo-700' : 'bg-gray-100 text-gray-700'}`}>
+                                   {op?.type || 'LTE'}
                                 </span>
                              </div>
                            ))}
