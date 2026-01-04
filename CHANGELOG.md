@@ -8,6 +8,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Fixed
+- **Missing SMS/MMS/2FA Order Functions**
+  - Added missing `createSMSOrder`, `createMMSOrder`, and `create2FAOrder` functions to `lib/providers/helpers.ts`
+  - These functions were referenced in `store.tsx` but were missing from the helpers file
+  - All order creation functions are now properly implemented and exported
+- **Accessibility Issues in Marketplace**
+  - Fixed buttons without discernible text by adding `aria-label` and `title` attributes
+  - Improved accessibility for screen readers and keyboard navigation
 - **Build Error: Async/Await in Filter Callback**
   - Fixed TypeScript build error in `ProviderManager.ts` where `await` was used inside a `.filter()` callback
   - Refactored `selectProvider()` method to properly handle async availability checks using `Promise.all()`

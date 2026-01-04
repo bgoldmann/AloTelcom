@@ -290,7 +290,14 @@ const Marketplace: React.FC = () => {
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
                 {searchTerm && (
-                  <button onClick={() => setSearchTerm('')} className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"><X className="h-4 w-4" /></button>
+                  <button 
+                    onClick={() => setSearchTerm('')} 
+                    aria-label="Clear search"
+                    title="Clear search"
+                    className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
                 )}
             </div>
 
@@ -353,6 +360,8 @@ const Marketplace: React.FC = () => {
             <div className="animate-slide-in-right">
                <button 
                  onClick={() => setSelectedCountryName(null)}
+                 aria-label="Back to all countries"
+                 title="Back to all countries"
                  className="flex items-center text-gray-500 dark:text-gray-400 hover:text-pars-cta dark:hover:text-pars-cta font-bold mb-6 transition-colors bg-white dark:bg-stone-800 px-4 py-2 rounded-full shadow-sm hover:shadow-md"
                >
                  <ChevronLeft className="h-5 w-5 mr-1" /> Back to {esimTab === 'regional' ? 'Regions' : 'Countries'}
@@ -493,6 +502,8 @@ const PlanCard: React.FC<PlanCardProps> = ({ plan, onDetails, delay }) => {
 
         <button
           onClick={(e) => { e.stopPropagation(); onDetails(); }}
+          aria-label="View plan details"
+          title="View plan details"
           className="w-full py-4 bg-gray-100 dark:bg-stone-800 text-pars-primary dark:text-white font-bold rounded-2xl hover:bg-pars-cta hover:text-white transition-all shadow-sm flex items-center justify-center gap-2 group-hover:scale-[1.02] transform duration-200"
         >
           View Details <ArrowRight className="h-4 w-4" />
@@ -549,7 +560,12 @@ const PlanDetailsModal: React.FC<{ plan: Plan; isOpen: boolean; onClose: () => v
                    <p className="text-gray-500 dark:text-gray-400 font-medium">{plan.data} • {plan.validity}</p>
                 </div>
              </div>
-             <button onClick={onClose} className="p-2 rounded-full bg-white dark:bg-stone-800 hover:bg-gray-200 dark:hover:bg-stone-700 transition-colors">
+             <button 
+               onClick={onClose} 
+               aria-label="Close modal"
+               title="Close"
+               className="p-2 rounded-full bg-white dark:bg-stone-800 hover:bg-gray-200 dark:hover:bg-stone-700 transition-colors"
+             >
                 <X className="h-5 w-5 text-gray-500 dark:text-gray-400" />
              </button>
           </div>
@@ -688,6 +704,8 @@ const PlanDetailsModal: React.FC<{ plan: Plan; isOpen: boolean; onClose: () => v
              </div>
              <button 
                onClick={onBuy}
+               aria-label="Buy this plan"
+               title="Buy plan"
                className="bg-pars-cta text-white px-8 py-3.5 rounded-xl font-bold hover:bg-orange-700 transition shadow-lg flex items-center gap-2 transform hover:-translate-y-0.5"
              >
                 Add to Cart <ArrowRight className="h-5 w-5" />
