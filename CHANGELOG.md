@@ -8,6 +8,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Fixed
+- **Vercel Deployment - Blank Page Issue**
+  - Removed conflicting `importmap` from `index.html` that was preventing Vite's built JavaScript from loading
+  - Vite automatically injects script tags during build, so the importmap was interfering with production deployment
+  - Website should now render correctly on Vercel deployment
 - **Vercel Deployment Environment Variables**
   - Removed invalid secret references from `vercel.json` that were causing deployment errors
   - Environment variables should now be set directly in Vercel dashboard instead of referencing non-existent secrets
