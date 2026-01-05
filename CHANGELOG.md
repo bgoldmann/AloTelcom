@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- **Footer Copyright Text Updated**
+  - Updated footer copyright to include links to AloTelcom.com and GoldmannLLC.com
+  - Changed from dynamic year to fixed "© 2026"
+  - Added hover effects to footer links for better UX
+  - Files updated:
+    - `components/Layout.tsx` - Updated footer copyright text with links
+
 ### Performance
 - **PageSpeed Optimization - Quick Wins**
   - Added resource hints (preconnect) for Google Fonts to reduce DNS lookup time

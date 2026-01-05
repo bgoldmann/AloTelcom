@@ -277,7 +277,9 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
             </div>
           </div>
           <div className="border-t border-gray-100 dark:border-stone-800 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
-            <p className="text-xs text-gray-400 dark:text-gray-500">&copy; {new Date().getFullYear()} AloTelcom Inc. All rights reserved.</p>
+            <p className="text-xs text-gray-400 dark:text-gray-500">
+              &copy; 2026 <a href="https://alotelcom.com" className="hover:text-pars-cta transition-colors">AloTelcom.com</a> <a href="https://goldmannllc.com" className="hover:text-pars-cta transition-colors">GoldmannLLC.com</a> All rights reserved.
+            </p>
             <div className="flex gap-6">
                <Link to="/legal" className="text-xs text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 cursor-pointer">Privacy Policy</Link>
                <Link to="/legal" className="text-xs text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 cursor-pointer">Terms of Service</Link>
