@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Performance
+- **PageSpeed Optimization - Quick Wins**
+  - Added resource hints (preconnect) for Google Fonts to reduce DNS lookup time
+  - Added dns-prefetch for external resources (Tailwind CDN, image services)
+  - Optimized Google Fonts loading: Reduced from 6 weights (300-800) to 3 weights (400, 600, 700)
+  - Added lazy loading to review images on homepage
+  - Expected improvement: 200-500ms reduction in First Contentful Paint (FCP)
+  - Files updated:
+    - `index.html` - Added preconnect and dns-prefetch hints, optimized font weights
+    - `pages/Home.tsx` - Added lazy loading to images
+  - Reference: [PageSpeed Insights Report](https://pagespeed.web.dev/analysis/https-www-alotelcom-com/6wzl5w1iiz?hl=en&form_factor=desktop)
+  - Documentation: Created `PERFORMANCE_OPTIMIZATION.md` with comprehensive optimization roadmap
+
 ### Added
 - **SMS/MMS/2FA Products in Marketplace**
   - Added SMS messaging products to marketplace (1, 100, 1000 message plans)

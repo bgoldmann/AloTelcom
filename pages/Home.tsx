@@ -277,7 +277,7 @@ const Home: React.FC = () => {
                     </div>
                     <p className="text-gray-600 dark:text-gray-300 italic mb-6 flex-grow leading-relaxed">"{review.text}"</p>
                     <div className="flex items-center gap-4 mt-auto">
-                       <img src={review.img} alt={review.name} className="w-12 h-12 rounded-full object-cover ring-2 ring-white dark:ring-stone-700 shadow-md" />
+                       <img src={review.img} alt={review.name} className="w-12 h-12 rounded-full object-cover ring-2 ring-white dark:ring-stone-700 shadow-md" loading="lazy" />
                        <div>
                           <div className="font-bold text-pars-primary dark:text-white">{review.name}</div>
                           <div className="text-xs text-gray-500 dark:text-gray-400 font-medium uppercase tracking-wide">{review.role}</div>
