@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { SEO } from '../lib/seo';
 import { BreadcrumbSchemaScript, ProductSchemaScript } from '../lib/schema';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Search, X, Zap, Globe, Signal, ChevronLeft, Map, Phone, Shield, Mic, CheckCircle, ArrowRight, Info, Star, Share2, Wifi } from 'lucide-react';
+import { Search, X, Zap, Globe, Signal, ChevronLeft, Map, Phone, Shield, Mic, CheckCircle, ArrowRight, Info, Star, Share2, Wifi, MessageSquare, Image, Key } from 'lucide-react';
 import { Plan, Review } from '../types';
 import { useApp } from '../store';
 
@@ -166,14 +166,167 @@ const generateVoipPlans = (): Plan[] => {
   ];
 };
 
+const generateSmsPlans = (): Plan[] => {
+  return [
+    { 
+      id: 'sms-single', 
+      type: 'sms', 
+      country: 'Global SMS', 
+      region: 'Worldwide', 
+      data: '1 Message', 
+      validity: 'Instant Delivery', 
+      price: 0.05, 
+      flag: '💬', 
+      features: ['Instant Delivery', 'Global Coverage', 'Delivery Reports'], 
+      isPopular: false, 
+      description: 'Send a single SMS message to any phone number worldwide. Perfect for notifications and alerts.',
+      phoneNumber: '', // To be provided by user
+      fromNumber: '' // To be provided by user
+    },
+    { 
+      id: 'sms-100', 
+      type: 'sms', 
+      country: 'Global SMS', 
+      region: 'Worldwide', 
+      data: '100 Messages', 
+      validity: 'No Expiry', 
+      price: 4.00, 
+      flag: '💬', 
+      features: ['Bulk Messaging', 'API Access', 'Delivery Reports'], 
+      isPopular: true, 
+      description: 'Send 100 SMS messages. Great for small businesses and developers.',
+      phoneNumber: '',
+      fromNumber: ''
+    },
+    { 
+      id: 'sms-1000', 
+      type: 'sms', 
+      country: 'Global SMS', 
+      region: 'Worldwide', 
+      data: '1000 Messages', 
+      validity: 'No Expiry', 
+      price: 35.00, 
+      flag: '💬', 
+      features: ['High Volume', 'API Access', 'Priority Delivery'], 
+      isPopular: false, 
+      description: 'Best value for high-volume messaging. Perfect for businesses and marketing campaigns.',
+      phoneNumber: '',
+      fromNumber: ''
+    },
+  ];
+};
+
+const generateMmsPlans = (): Plan[] => {
+  return [
+    { 
+      id: 'mms-single', 
+      type: 'mms', 
+      country: 'Global MMS', 
+      region: 'Worldwide', 
+      data: '1 Message', 
+      validity: 'Instant Delivery', 
+      price: 0.25, 
+      flag: '📷', 
+      features: ['Image Support', 'Video Support', 'Global Coverage'], 
+      isPopular: false, 
+      description: 'Send a single MMS message with images or videos to any phone number worldwide.',
+      phoneNumber: '',
+      fromNumber: ''
+    },
+    { 
+      id: 'mms-50', 
+      type: 'mms', 
+      country: 'Global MMS', 
+      region: 'Worldwide', 
+      data: '50 Messages', 
+      validity: 'No Expiry', 
+      price: 10.00, 
+      flag: '📷', 
+      features: ['Media Sharing', 'API Access', 'Delivery Reports'], 
+      isPopular: true, 
+      description: 'Send 50 MMS messages with photos, videos, or audio. Great for marketing and notifications.',
+      phoneNumber: '',
+      fromNumber: ''
+    },
+    { 
+      id: 'mms-500', 
+      type: 'mms', 
+      country: 'Global MMS', 
+      region: 'Worldwide', 
+      data: '500 Messages', 
+      validity: 'No Expiry', 
+      price: 75.00, 
+      flag: '📷', 
+      features: ['High Volume', 'Media Support', 'Priority Delivery'], 
+      isPopular: false, 
+      description: 'Best value for high-volume MMS messaging. Perfect for marketing campaigns and media sharing.',
+      phoneNumber: '',
+      fromNumber: ''
+    },
+  ];
+};
+
+const generate2FAPlans = (): Plan[] => {
+  return [
+    { 
+      id: '2fa-sms', 
+      type: '2fa', 
+      country: '2FA Verification', 
+      region: 'Worldwide', 
+      data: 'SMS Code', 
+      validity: '5 Minutes', 
+      price: 0.05, 
+      flag: '🔐', 
+      features: ['6-Digit Code', '5 Min Expiry', 'SMS Delivery'], 
+      isPopular: true, 
+      description: 'Send a 2FA verification code via SMS. Secure and reliable for account verification.',
+      phoneNumber: '', // To be provided by user
+      channel: 'sms'
+    },
+    { 
+      id: '2fa-voice', 
+      type: '2fa', 
+      country: '2FA Verification', 
+      region: 'Worldwide', 
+      data: 'Voice Code', 
+      validity: '5 Minutes', 
+      price: 0.10, 
+      flag: '🔐', 
+      features: ['6-Digit Code', 'Voice Call', '5 Min Expiry'], 
+      isPopular: false, 
+      description: 'Receive a 2FA verification code via automated voice call. Perfect for users without SMS access.',
+      phoneNumber: '',
+      channel: 'voice'
+    },
+    { 
+      id: '2fa-flash', 
+      type: '2fa', 
+      country: '2FA Verification', 
+      region: 'Supported Countries', 
+      data: 'Flash Call', 
+      validity: '5 Minutes', 
+      price: 0.08, 
+      flag: '🔐', 
+      features: ['Instant Verification', 'No SMS Needed', '5 Min Expiry'], 
+      isPopular: false, 
+      description: 'Flash call verification - no SMS needed. Phone rings once and auto-verifies. Available in select countries.',
+      phoneNumber: '',
+      channel: 'flash_call'
+    },
+  ];
+};
+
 const LOCAL_PLANS = generateLocalPlans();
 const REGIONAL_PLANS = generateRegionalPlans();
 const GLOBAL_PLANS = generateGlobalPlans();
 const NUMBER_PLANS = generateNumberPlans();
 const VPN_PLANS = generateVpnPlans();
 const VOIP_PLANS = generateVoipPlans();
+const SMS_PLANS = generateSmsPlans();
+const MMS_PLANS = generateMmsPlans();
+const TWOFA_PLANS = generate2FAPlans();
 
-type Category = 'esim' | 'number' | 'vpn' | 'voip';
+type Category = 'esim' | 'number' | 'vpn' | 'voip' | 'sms' | 'mms' | '2fa';
 type EsimTab = 'local' | 'regional' | 'global';
 
 const Marketplace: React.FC = () => {
@@ -196,16 +349,30 @@ const Marketplace: React.FC = () => {
   useEffect(() => {
     if (initialSearch) {
        // Search logic to auto-switch tabs
-       const inNumbers = NUMBER_PLANS.some(p => p.country.toLowerCase().includes(initialSearch.toLowerCase()));
+       const lower = initialSearch.toLowerCase();
+       
+       const inNumbers = NUMBER_PLANS.some(p => p.country.toLowerCase().includes(lower));
        if (inNumbers) { setActiveCategory('number'); return; }
 
-       const inVpn = VPN_PLANS.some(p => p.data.toLowerCase().includes(initialSearch.toLowerCase()));
+       const inVpn = VPN_PLANS.some(p => p.data.toLowerCase().includes(lower));
        if (inVpn) { setActiveCategory('vpn'); return; }
 
-       const inLocal = LOCAL_PLANS.some(p => p.country.toLowerCase().includes(initialSearch.toLowerCase()));
+       const inVoip = VOIP_PLANS.some(p => p.country.toLowerCase().includes(lower) || p.data.toLowerCase().includes(lower));
+       if (inVoip) { setActiveCategory('voip'); return; }
+
+       const inSms = SMS_PLANS.some(p => p.type === 'sms' || lower.includes('sms') || lower.includes('text message'));
+       if (inSms) { setActiveCategory('sms'); return; }
+
+       const inMms = MMS_PLANS.some(p => p.type === 'mms' || lower.includes('mms') || lower.includes('multimedia'));
+       if (inMms) { setActiveCategory('mms'); return; }
+
+       const in2fa = TWOFA_PLANS.some(p => p.type === '2fa' || lower.includes('2fa') || lower.includes('verification') || lower.includes('authentication'));
+       if (in2fa) { setActiveCategory('2fa'); return; }
+
+       const inLocal = LOCAL_PLANS.some(p => p.country.toLowerCase().includes(lower));
        if (inLocal) { setActiveCategory('esim'); setEsimTab('local'); return; }
 
-       const inRegional = REGIONAL_PLANS.some(p => p.region.toLowerCase().includes(initialSearch.toLowerCase()));
+       const inRegional = REGIONAL_PLANS.some(p => p.region.toLowerCase().includes(lower));
        if (inRegional) { setActiveCategory('esim'); setEsimTab('regional'); return; }
     }
   }, [initialSearch]);
@@ -220,6 +387,12 @@ const Marketplace: React.FC = () => {
       source = VPN_PLANS;
     } else if (activeCategory === 'voip') {
       source = VOIP_PLANS;
+    } else if (activeCategory === 'sms') {
+      source = SMS_PLANS;
+    } else if (activeCategory === 'mms') {
+      source = MMS_PLANS;
+    } else if (activeCategory === '2fa') {
+      source = TWOFA_PLANS;
     }
 
     if (searchTerm) {
@@ -262,6 +435,9 @@ const Marketplace: React.FC = () => {
       number: 'Virtual Phone Numbers',
       vpn: 'VPN Services',
       voip: 'VOIP Calling Credits',
+      sms: 'SMS Messaging',
+      mms: 'MMS Messaging',
+      '2fa': '2FA Verification',
     };
     return {
       title: `${categoryNames[activeCategory]} | AloTelcom Marketplace`,
@@ -301,7 +477,11 @@ const Marketplace: React.FC = () => {
                 <input 
                   type="text" 
                   className="w-full pl-12 pr-4 py-3 bg-gray-50 dark:bg-stone-800 border border-gray-100 dark:border-stone-700 rounded-2xl text-base text-gray-900 dark:text-white focus:bg-white dark:focus:bg-stone-800 focus:ring-2 focus:ring-pars-cta/20 focus:border-pars-cta/50 transition-all shadow-inner outline-none"
-                  placeholder={activeCategory === 'esim' ? "Search countries..." : "Search plans..."}
+                  placeholder={
+                    activeCategory === 'esim' ? "Search countries..." : 
+                    activeCategory === 'sms' || activeCategory === 'mms' || activeCategory === '2fa' ? "Search messaging plans..." :
+                    "Search plans..."
+                  }
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
@@ -325,6 +505,9 @@ const Marketplace: React.FC = () => {
                    { id: 'number', icon: Phone, label: 'Numbers' },
                    { id: 'vpn', icon: Shield, label: 'VPN' },
                    { id: 'voip', icon: Mic, label: 'VOIP' },
+                   { id: 'sms', icon: MessageSquare, label: 'SMS' },
+                   { id: 'mms', icon: Image, label: 'MMS' },
+                   { id: '2fa', icon: Key, label: '2FA' },
                  ].map(cat => (
                    <button
                      key={cat.id}
@@ -428,7 +611,7 @@ const Marketplace: React.FC = () => {
              </div>
           )
         ) : (
-          /* VPN, Numbers, VOIP Layout */
+          /* VPN, Numbers, VOIP, SMS, MMS, 2FA Layout */
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 animate-fade-in-up">
              {displayedPlans.map((plan, idx) => (
                 <PlanCard key={plan.id} plan={plan} onDetails={() => handleOpenDetails(plan)} delay={idx} />
@@ -478,7 +661,13 @@ const PlanCard: React.FC<PlanCardProps> = ({ plan, onDetails, delay }) => {
                  {plan.data}
                </div>
                <div className="text-xs font-bold text-gray-400 uppercase tracking-wide">
-                 {plan.type === 'number' ? 'Phone Number' : plan.type === 'vpn' ? 'Security Plan' : plan.type === 'voip' ? 'Credits' : 'Data Allowance'}
+                 {plan.type === 'number' ? 'Phone Number' : 
+                  plan.type === 'vpn' ? 'Security Plan' : 
+                  plan.type === 'voip' ? 'Credits' : 
+                  plan.type === 'sms' ? 'Text Message' :
+                  plan.type === 'mms' ? 'Multimedia' :
+                  plan.type === '2fa' ? 'Verification' :
+                  'Data Allowance'}
                </div>
              </div>
           </div>

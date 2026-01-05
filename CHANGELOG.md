@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **SMS/MMS/2FA Products in Marketplace**
+  - Added SMS messaging products to marketplace (1, 100, 1000 message plans)
+  - Added MMS messaging products to marketplace (1, 50, 500 message plans)
+  - Added 2FA verification products to marketplace (SMS, Voice, Flash Call channels)
+  - Created generator functions: `generateSmsPlans()`, `generateMmsPlans()`, `generate2FAPlans()`
+  - Added 3 new category tabs: SMS, MMS, and 2FA with appropriate icons
+  - Updated Category type to include `'sms' | 'mms' | '2fa'`
+  - Enhanced search functionality to auto-detect SMS/MMS/2FA searches
+  - Updated SEO metadata for new communication service categories
+  - Updated plan card display to show correct labels for messaging services
+  - Total products now: ~143 plans (up from ~134)
+  - Files updated:
+    - `pages/Marketplace.tsx` - Added SMS/MMS/2FA categories and products
+  - New products:
+    - **SMS:** 3 plans ($0.05 - $35.00) for single, bulk (100), and high-volume (1000) messaging
+    - **MMS:** 3 plans ($0.25 - $75.00) for single, bulk (50), and high-volume (500) multimedia messaging
+    - **2FA:** 3 plans ($0.05 - $0.10) for SMS, Voice, and Flash Call verification channels
+
 ### Fixed
 - **Critical TypeScript Compilation Errors - Blog Posts & Countries Tables**
   - Added missing `blog_posts` table type definition to `lib/database.types.ts`
