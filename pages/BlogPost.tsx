@@ -196,7 +196,7 @@ If you're still having trouble, contact our support team at support@alotelcom.co
           <article className="bg-white dark:bg-stone-800 rounded-2xl border border-pars-light overflow-hidden shadow-sm">
             {post.image && (
               <div className="h-64 md:h-96 bg-gradient-to-br from-pars-cta to-amber-500 overflow-hidden">
-                <img src={post.image} alt={post.title} className="w-full h-full object-cover" />
+                <img src={post.image} alt={post.title} className="w-full h-full object-cover" loading="lazy" />
               </div>
             )}
 

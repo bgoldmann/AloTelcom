@@ -57,7 +57,7 @@ const Profile: React.FC = () => {
         <div className="flex flex-col md:flex-row md:items-center gap-6 mb-8">
           <div className="relative">
             <div className="w-24 h-24 rounded-full bg-gray-200 dark:bg-stone-800 overflow-hidden ring-4 ring-white dark:ring-stone-900 shadow-xl">
-              <img src={user.avatar || `https://ui-avatars.com/api/?name=${user.name}&background=random`} alt={user.name} className="w-full h-full object-cover" />
+              <img src={user.avatar || `https://ui-avatars.com/api/?name=${user.name}&background=random`} alt={user.name} className="w-full h-full object-cover" loading="lazy" />
             </div>
             <div className="absolute bottom-0 right-0 bg-green-500 w-6 h-6 rounded-full border-4 border-white dark:border-stone-900" title="Active"></div>
           </div>

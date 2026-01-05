@@ -305,7 +305,7 @@ const Admin: React.FC = () => {
                             <td className="px-6 py-4">
                                <div className="flex items-center gap-3">
                                   <div className="w-10 h-10 rounded-full bg-gray-200 overflow-hidden">
-                                     <img src={user.avatar || `https://ui-avatars.com/api/?name=${user.name}&background=random`} alt={user.name} className="w-full h-full object-cover" />
+                                     <img src={user.avatar || `https://ui-avatars.com/api/?name=${user.name}&background=random`} alt={user.name} className="w-full h-full object-cover" loading="lazy" />
                                   </div>
                                   <div>
                                      <div className="font-bold text-gray-900">{user.name}</div>

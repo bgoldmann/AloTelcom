@@ -227,7 +227,7 @@ const Blog: React.FC = () => {
                   >
                     {post.image && (
                       <div className="h-48 bg-gradient-to-br from-pars-cta to-amber-500 overflow-hidden">
-                        <img src={post.image} alt={post.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                        <img src={post.image} alt={post.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" loading="lazy" />
                       </div>
                     )}
                     <div className="p-6">
@@ -282,7 +282,7 @@ const Blog: React.FC = () => {
                   >
                     {post.image && (
                       <div className="h-40 bg-gradient-to-br from-pars-cta to-amber-500 overflow-hidden">
-                        <img src={post.image} alt={post.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                        <img src={post.image} alt={post.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" loading="lazy" />
                       </div>
                     )}
                     <div className="p-6">
