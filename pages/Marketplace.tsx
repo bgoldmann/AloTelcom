@@ -6,7 +6,7 @@ import { Search, X, Zap, Globe, Signal, ChevronLeft, Map, Phone, Shield, Mic, Ch
 import { Plan, Review } from '../types';
 import { useApp } from '../store';
 import { getAllProducts } from '../lib/supabase-helpers';
-import { LoadingSpinner } from '../components/LoadingSpinner';
+import LoadingSpinner from '../components/LoadingSpinner';
 
 // Helper function to create dynamic styles for animations
 const createAnimationStyle = (delay: number): React.CSSProperties => ({
@@ -214,14 +214,14 @@ const Marketplace: React.FC = () => {
       )}
 
       {!loading && !error && (
-      
-      {/* Header & Tabs */}
-      <div className="bg-white/95 dark:bg-stone-900/95 backdrop-blur-md border-b border-gray-100 dark:border-stone-800 sticky top-16 z-30 shadow-sm transition-all duration-300">
-         <div className="max-w-5xl mx-auto px-4 py-6">
-            <h1 className="text-3xl font-extrabold text-center text-pars-primary dark:text-white mb-6">Marketplace</h1>
-            
-            {/* Search */}
-            <div className="relative mb-8 max-w-lg mx-auto group">
+        <>
+          {/* Header & Tabs */}
+          <div className="bg-white/95 dark:bg-stone-900/95 backdrop-blur-md border-b border-gray-100 dark:border-stone-800 sticky top-16 z-30 shadow-sm transition-all duration-300">
+            <div className="max-w-5xl mx-auto px-4 py-6">
+              <h1 className="text-3xl font-extrabold text-center text-pars-primary dark:text-white mb-6">Marketplace</h1>
+              
+              {/* Search */}
+              <div className="relative mb-8 max-w-lg mx-auto group">
                 <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500 h-5 w-5 group-hover:text-pars-cta transition-colors" />
                 <input 
                   type="text" 
@@ -244,61 +244,61 @@ const Marketplace: React.FC = () => {
                     <X className="h-4 w-4" />
                   </button>
                 )}
-            </div>
+              </div>
 
-            {/* Category Tabs */}
-            <div className="flex justify-center mb-6 overflow-x-auto pb-2 scrollbar-hide">
-               <div className="flex gap-2 sm:gap-4 px-2">
-                 {[
-                   { id: 'esim', icon: Signal, label: 'eSIM' },
-                   { id: 'number', icon: Phone, label: 'Numbers' },
-                   { id: 'vpn', icon: Shield, label: 'VPN' },
-                   { id: 'voip', icon: Mic, label: 'VOIP' },
-                   { id: 'sms', icon: MessageSquare, label: 'SMS' },
-                   { id: 'mms', icon: Image, label: 'MMS' },
-                   { id: '2fa', icon: Key, label: '2FA' },
-                 ].map(cat => (
-                   <button
-                     key={cat.id}
-                     onClick={() => { setActiveCategory(cat.id as Category); setSelectedCountryName(null); }}
-                     className={`flex items-center gap-2 px-6 py-3 rounded-xl font-bold transition-all whitespace-nowrap ${
-                       activeCategory === cat.id 
-                         ? 'bg-pars-cta text-white shadow-lg transform scale-105' 
-                         : 'bg-white dark:bg-stone-800 text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-stone-700 border border-gray-100 dark:border-stone-700'
-                     }`}
-                   >
-                     <cat.icon className="h-4 w-4" /> {cat.label}
-                   </button>
-                 ))}
-               </div>
-            </div>
-
-            {/* Sub-Tabs for eSIM */}
-            {activeCategory === 'esim' && (
-              <div className="flex justify-center animate-fade-in">
-                <div className="bg-gray-100 dark:bg-stone-800 p-1.5 rounded-full inline-flex relative shadow-inner">
-                   <div 
-                     className="absolute top-1.5 bottom-1.5 bg-white dark:bg-stone-700 rounded-full shadow-md transition-all duration-300 ease-out z-0"
-                     style={createTabIndicatorStyle(esimTab)} // eslint-disable-line
-                   ></div>
-                   {(['local', 'regional', 'global'] as const).map(tab => (
-                     <button
-                       key={tab}
-                       onClick={() => { setEsimTab(tab); setSelectedCountryName(null); }}
-                       aria-label={`View ${tab} eSIM plans`}
-                       title={`View ${tab} plans`}
-                       className={`relative z-10 px-6 sm:px-8 py-2 rounded-full text-sm font-bold capitalize transition-colors duration-300 ${esimTab === tab ? 'text-pars-primary dark:text-white' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'}`}
-                     >
-                       {tab}
-                     </button>
-                   ))}
+              {/* Category Tabs */}
+              <div className="flex justify-center mb-6 overflow-x-auto pb-2 scrollbar-hide">
+                <div className="flex gap-2 sm:gap-4 px-2">
+                  {[
+                    { id: 'esim', icon: Signal, label: 'eSIM' },
+                    { id: 'number', icon: Phone, label: 'Numbers' },
+                    { id: 'vpn', icon: Shield, label: 'VPN' },
+                    { id: 'voip', icon: Mic, label: 'VOIP' },
+                    { id: 'sms', icon: MessageSquare, label: 'SMS' },
+                    { id: 'mms', icon: Image, label: 'MMS' },
+                    { id: '2fa', icon: Key, label: '2FA' },
+                  ].map(cat => (
+                    <button
+                      key={cat.id}
+                      onClick={() => { setActiveCategory(cat.id as Category); setSelectedCountryName(null); }}
+                      className={`flex items-center gap-2 px-6 py-3 rounded-xl font-bold transition-all whitespace-nowrap ${
+                        activeCategory === cat.id 
+                          ? 'bg-pars-cta text-white shadow-lg transform scale-105' 
+                          : 'bg-white dark:bg-stone-800 text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-stone-700 border border-gray-100 dark:border-stone-700'
+                      }`}
+                    >
+                      <cat.icon className="h-4 w-4" /> {cat.label}
+                    </button>
+                  ))}
                 </div>
               </div>
-            )}
-         </div>
-      </div>
 
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+              {/* Sub-Tabs for eSIM */}
+              {activeCategory === 'esim' && (
+                <div className="flex justify-center animate-fade-in">
+                  <div className="bg-gray-100 dark:bg-stone-800 p-1.5 rounded-full inline-flex relative shadow-inner">
+                    <div 
+                      className="absolute top-1.5 bottom-1.5 bg-white dark:bg-stone-700 rounded-full shadow-md transition-all duration-300 ease-out z-0"
+                      style={createTabIndicatorStyle(esimTab)} // eslint-disable-line
+                    ></div>
+                    {(['local', 'regional', 'global'] as const).map(tab => (
+                      <button
+                        key={tab}
+                        onClick={() => { setEsimTab(tab); setSelectedCountryName(null); }}
+                        aria-label={`View ${tab} eSIM plans`}
+                        title={`View ${tab} plans`}
+                        className={`relative z-10 px-6 sm:px-8 py-2 rounded-full text-sm font-bold capitalize transition-colors duration-300 ${esimTab === tab ? 'text-pars-primary dark:text-white' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'}`}
+                      >
+                        {tab}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
         
         {/* eSIM Grid/Detail View */}
         {activeCategory === 'esim' ? (
@@ -367,18 +367,18 @@ const Marketplace: React.FC = () => {
              ))}
           </div>
         )}
-      </div>
+          </div>
 
-      {/* Detail Modal */}
-      {selectedPlanForDetail && (
-        <PlanDetailsModal 
-          plan={selectedPlanForDetail} 
-          isOpen={!!selectedPlanForDetail} 
-          onClose={() => setSelectedPlanForDetail(null)}
-          onBuy={() => handleBuyFromModal(selectedPlanForDetail)}
-        />
-      )}
-      </div>
+          {/* Detail Modal */}
+          {selectedPlanForDetail && (
+            <PlanDetailsModal 
+              plan={selectedPlanForDetail} 
+              isOpen={!!selectedPlanForDetail} 
+              onClose={() => setSelectedPlanForDetail(null)}
+              onBuy={() => handleBuyFromModal(selectedPlanForDetail)}
+            />
+          )}
+        </>
       )}
     </div>
     </>
