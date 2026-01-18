@@ -147,41 +147,57 @@ export const testSupabaseConnection = async (): Promise<{ success: boolean; erro
     }
     
     console.log('Testing Supabase connection...');
-    console.log('Supabase URL:', supabaseUrl ? supabaseUrl.substring(0, 30) + '...' : 'MISSING');
-    const { data, error } = await supabase
-      .from('products')
-      .select('id')
-      .limit(1);
+    console.log('Supabase URL:', supabaseUrl ? supabaseUrl.substring(0, 40) + '...' : 'MISSING');
+    
+    // Test connection with timeout wrapper
+    const queryPromise = supabase.from('products').select('id').limit(1);
+    const timeoutPromise = new Promise<{ data: null; error: { message: string } }>((_, reject) => {
+      setTimeout(() => {
+        reject(new Error('Connection timeout: Supabase is not responding within 8 seconds. This could mean:\n1. The Supabase project is paused (check Dashboard)\n2. Network connectivity issues\n3. The URL is incorrect\n4. RLS policies are blocking the request\n5. The database is unavailable'));
+      }, 8000);
+    });
+    
+    const { data, error } = await Promise.race([
+      queryPromise,
+      timeoutPromise
+    ]) as { data: any; error: any };
     
     if (error) {
       console.error('Connection test failed:', error);
+      console.error('Error code:', error.code);
+      console.error('Error message:', error.message);
       
       // Provide specific error messages
       if (error.code === 'PGRST116') {
         return {
           success: false,
-          error: 'Products table not found. Please run schema.sql in Supabase SQL Editor.'
+          error: 'Products table not found. Please run schema.sql in Supabase SQL Editor to create the table.'
         };
       } else if (error.code === '42501') {
         return {
           success: false,
-          error: 'Permission denied. Please check RLS policies - products table should allow public SELECT.'
+          error: 'Permission denied (RLS). Please check RLS policies in Supabase Dashboard:\n1. Go to Authentication → Policies\n2. Ensure products table has "Products are viewable by everyone" policy\n3. Policy should use: USING (true)'
         };
-      } else if (error.message?.includes('JWT') || error.message?.includes('Invalid API key')) {
+      } else if (error.message?.includes('JWT') || error.message?.includes('Invalid API key') || error.code === 'PGRST301') {
         return {
           success: false,
-          error: 'Invalid Supabase API key. Please check VITE_SUPABASE_ANON_KEY in your environment variables.'
+          error: 'Invalid Supabase API key. Please verify VITE_SUPABASE_ANON_KEY is correct in your environment variables.'
         };
-      } else if (error.message?.includes('fetch') || error.message?.includes('network')) {
+      } else if (error.message?.includes('fetch') || error.message?.includes('network') || error.message?.includes('Failed to fetch')) {
         return {
           success: false,
-          error: 'Network error. Please check your internet connection and verify VITE_SUPABASE_URL is correct.'
+          error: `Network error: ${error.message}\n\nPossible causes:\n1. Supabase project is paused (check Supabase Dashboard)\n2. Incorrect Supabase URL\n3. Network/firewall blocking the connection\n4. CORS issues`
+        };
+      } else if (error.message?.includes('timeout')) {
+        return {
+          success: false,
+          error: 'Connection timeout: Supabase is not responding. Check if your project is paused or if there are network issues.'
         };
       }
       
       return {
         success: false,
-        error: `Connection failed: ${error.message || 'Unknown error'}`
+        error: `Connection failed: ${error.message || 'Unknown error'}\nError code: ${error.code || 'N/A'}`
       };
     }
     
@@ -189,9 +205,18 @@ export const testSupabaseConnection = async (): Promise<{ success: boolean; erro
     return { success: true };
   } catch (err: any) {
     console.error('Connection test error:', err);
+    
+    // Handle timeout errors specifically
+    if (err?.message?.includes('timeout')) {
+      return {
+        success: false,
+        error: err.message || 'Connection timeout: Supabase is not responding. Please check if your project is paused or if there are network issues.'
+      };
+    }
+    
     return {
       success: false,
-      error: `Connection error: ${err?.message || 'Unknown error'}`
+      error: `Connection error: ${err?.message || 'Unknown error'}\n\nThis usually means:\n1. Supabase project is paused (check Dashboard)\n2. Network connectivity issues\n3. Incorrect Supabase URL or API key\n4. Firewall or CORS blocking the connection`
     };
   }
 };
