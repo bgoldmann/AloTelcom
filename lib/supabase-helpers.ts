@@ -149,26 +149,8 @@ export const testSupabaseConnection = async (): Promise<{ success: boolean; erro
     console.log('Testing Supabase connection...');
     console.log('Supabase URL:', supabaseUrl ? supabaseUrl.substring(0, 40) + '...' : 'MISSING');
     
-    // First, try a simple health check - query the rest endpoint
-    try {
-      const healthCheckUrl = `${supabaseUrl}/rest/v1/`;
-      const healthResponse = await fetch(healthCheckUrl, {
-        method: 'HEAD',
-        headers: {
-          'apikey': supabaseAnonKey,
-          'Authorization': `Bearer ${supabaseAnonKey}`
-        },
-        signal: AbortSignal.timeout(5000) // 5 second timeout
-      });
-      
-      if (!healthResponse.ok) {
-        console.warn('Health check returned non-OK status:', healthResponse.status);
-      }
-      console.log('Health check passed - Supabase endpoint is reachable');
-    } catch (healthError: any) {
-      console.warn('Health check failed:', healthError.message);
-      // Continue anyway - might be CORS or other issue
-    }
+    // Skip health check - go straight to products query
+    // The products query will fail fast if there's a connection issue
     
     // Now test the products query with timeout
     const queryPromise = supabase.from('products').select('id').limit(1);
