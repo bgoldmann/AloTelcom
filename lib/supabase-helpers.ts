@@ -152,7 +152,7 @@ export const testSupabaseConnection = async (): Promise<{ success: boolean; erro
     // Skip health check - go straight to products query
     // The products query will fail fast if there's a connection issue
     
-    // Now test the products query with timeout
+    // Now test the products query with timeout using Promise.race
     const queryPromise = supabase.from('products').select('id').limit(1);
     const timeoutPromise = new Promise<never>((_, reject) => {
       setTimeout(() => {
