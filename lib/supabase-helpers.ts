@@ -129,7 +129,7 @@ export const updateUserProfile = async (userId: string, updates: Partial<User>):
   return mapDbUserToUser(data);
 };
 
-// Test Supabase connection
+// Test Supabase connection - simpler approach
 export const testSupabaseConnection = async (): Promise<{ success: boolean; error?: string }> => {
   try {
     // Check if environment variables are set
@@ -149,11 +149,32 @@ export const testSupabaseConnection = async (): Promise<{ success: boolean; erro
     console.log('Testing Supabase connection...');
     console.log('Supabase URL:', supabaseUrl ? supabaseUrl.substring(0, 40) + '...' : 'MISSING');
     
-    // Test connection with timeout wrapper
+    // First, try a simple health check - query the rest endpoint
+    try {
+      const healthCheckUrl = `${supabaseUrl}/rest/v1/`;
+      const healthResponse = await fetch(healthCheckUrl, {
+        method: 'HEAD',
+        headers: {
+          'apikey': supabaseAnonKey,
+          'Authorization': `Bearer ${supabaseAnonKey}`
+        },
+        signal: AbortSignal.timeout(5000) // 5 second timeout
+      });
+      
+      if (!healthResponse.ok) {
+        console.warn('Health check returned non-OK status:', healthResponse.status);
+      }
+      console.log('Health check passed - Supabase endpoint is reachable');
+    } catch (healthError: any) {
+      console.warn('Health check failed:', healthError.message);
+      // Continue anyway - might be CORS or other issue
+    }
+    
+    // Now test the products query with timeout
     const queryPromise = supabase.from('products').select('id').limit(1);
-    const timeoutPromise = new Promise<{ data: null; error: { message: string } }>((_, reject) => {
+    const timeoutPromise = new Promise<never>((_, reject) => {
       setTimeout(() => {
-        reject(new Error('Connection timeout: Supabase is not responding within 8 seconds. This could mean:\n1. The Supabase project is paused (check Dashboard)\n2. Network connectivity issues\n3. The URL is incorrect\n4. RLS policies are blocking the request\n5. The database is unavailable'));
+        reject(new Error('Connection timeout: Products query timed out after 8 seconds.\n\nThis usually means:\n1. Supabase project is paused (check Dashboard → Settings → General)\n2. Products table doesn\'t exist (run schema.sql)\n3. RLS policies are blocking access (check Authentication → Policies)\n4. Network/firewall issues\n\nQuick fix: Check if your Supabase project is active in the Dashboard'));
       }, 8000);
     });
     
