@@ -129,9 +129,82 @@ export const updateUserProfile = async (userId: string, updates: Partial<User>):
   return mapDbUserToUser(data);
 };
 
+// Test Supabase connection
+export const testSupabaseConnection = async (): Promise<{ success: boolean; error?: string }> => {
+  try {
+    // Check if environment variables are set
+    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+    const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+    
+    if (!supabaseUrl || !supabaseAnonKey) {
+      const missing = [];
+      if (!supabaseUrl) missing.push('VITE_SUPABASE_URL');
+      if (!supabaseAnonKey) missing.push('VITE_SUPABASE_ANON_KEY');
+      return {
+        success: false,
+        error: `Missing environment variables: ${missing.join(', ')}. Please set these in your .env.local file or Vercel environment variables.`
+      };
+    }
+    
+    console.log('Testing Supabase connection...');
+    const { data, error } = await supabase
+      .from('products')
+      .select('id')
+      .limit(1);
+    
+    if (error) {
+      console.error('Connection test failed:', error);
+      
+      // Provide specific error messages
+      if (error.code === 'PGRST116') {
+        return {
+          success: false,
+          error: 'Products table not found. Please run schema.sql in Supabase SQL Editor.'
+        };
+      } else if (error.code === '42501') {
+        return {
+          success: false,
+          error: 'Permission denied. Please check RLS policies - products table should allow public SELECT.'
+        };
+      } else if (error.message?.includes('JWT') || error.message?.includes('Invalid API key')) {
+        return {
+          success: false,
+          error: 'Invalid Supabase API key. Please check VITE_SUPABASE_ANON_KEY in your environment variables.'
+        };
+      } else if (error.message?.includes('fetch') || error.message?.includes('network')) {
+        return {
+          success: false,
+          error: 'Network error. Please check your internet connection and verify VITE_SUPABASE_URL is correct.'
+        };
+      }
+      
+      return {
+        success: false,
+        error: `Connection failed: ${error.message || 'Unknown error'}`
+      };
+    }
+    
+    console.log('Connection test successful');
+    return { success: true };
+  } catch (err: any) {
+    console.error('Connection test error:', err);
+    return {
+      success: false,
+      error: `Connection error: ${err?.message || 'Unknown error'}`
+    };
+  }
+};
+
 // Product operations
 export const getAllProducts = async (): Promise<Plan[]> => {
   console.log('getAllProducts: Starting query...');
+  
+  // Test connection first
+  const connectionTest = await testSupabaseConnection();
+  if (!connectionTest.success) {
+    throw new Error(connectionTest.error || 'Unable to connect to Supabase.');
+  }
+  
   const { data, error } = await supabase
     .from('products')
     .select('*')
@@ -140,7 +213,22 @@ export const getAllProducts = async (): Promise<Plan[]> => {
 
   if (error) {
     console.error('getAllProducts: Supabase error:', error);
-    throw new Error(`Failed to fetch products: ${error.message}`);
+    console.error('Error code:', error.code);
+    console.error('Error details:', error.details);
+    console.error('Error hint:', error.hint);
+    
+    // Provide more specific error messages
+    if (error.code === 'PGRST116') {
+      throw new Error('Products table not found. Please run the schema.sql script in Supabase.');
+    } else if (error.code === '42501') {
+      throw new Error('Permission denied. Please check RLS policies in Supabase.');
+    } else if (error.message?.includes('JWT')) {
+      throw new Error('Invalid Supabase API key. Please check VITE_SUPABASE_ANON_KEY.');
+    } else if (error.message?.includes('fetch')) {
+      throw new Error('Network error. Please check your internet connection and Supabase URL.');
+    }
+    
+    throw new Error(`Failed to fetch products: ${error.message || 'Unknown error'}`);
   }
 
   if (!data) {

@@ -55,16 +55,19 @@ const Marketplace: React.FC = () => {
     const timeoutId = setTimeout(() => {
       if (isMounted) {
         console.error('Product fetch timeout - taking too long');
-        setError('Request is taking too long. Please check your connection and try again.');
+        setError('Request is taking too long. This usually means:\n1. Supabase environment variables are missing or incorrect\n2. Network connection issues\n3. Supabase project is paused or unavailable\n\nPlease check the browser console for detailed error messages.');
         setLoading(false);
       }
-    }, 10000); // 10 second timeout
+    }, 15000); // 15 second timeout (increased for slow connections)
 
     const fetchProducts = async () => {
       try {
         setLoading(true);
         setError(null);
         console.log('Fetching products from database...');
+        console.log('Supabase URL:', import.meta.env.VITE_SUPABASE_URL ? 'Set' : 'MISSING');
+        console.log('Supabase Key:', import.meta.env.VITE_SUPABASE_ANON_KEY ? 'Set' : 'MISSING');
+        
         const products = await getAllProducts();
         console.log('Products fetched:', products.length, products);
         
@@ -74,7 +77,7 @@ const Marketplace: React.FC = () => {
         
         if (products.length === 0) {
           console.warn('No products found in database. Make sure seed.sql has been run.');
-          setError('No products available. The database may be empty. Please run the seed script or contact support.');
+          setError('No products available. The database may be empty. Please run the seed script (supabase/seed.sql) in your Supabase SQL Editor.');
         } else {
           setAllProducts(products);
         }
@@ -88,7 +91,10 @@ const Marketplace: React.FC = () => {
           error: err,
           stack: err?.stack
         });
-        setError(`Failed to load products: ${err?.message || 'Unknown error'}. Please check your Supabase connection and environment variables.`);
+        
+        // More user-friendly error message
+        const errorMsg = err?.message || 'Unknown error';
+        setError(`Failed to load products: ${errorMsg}\n\nPlease verify:\n1. Supabase environment variables are set correctly\n2. Database schema has been run\n3. RLS policies allow public read access to products table`);
       } finally {
         if (isMounted) {
           setLoading(false);
