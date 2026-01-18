@@ -43,91 +43,23 @@ const Blog: React.FC = () => {
     'Destination Guides',
   ];
 
-  // Mock blog posts - In production, fetch from Supabase
-  const mockPosts: BlogPost[] = [
-    {
-      id: '1',
-      title: 'How to Install eSIM on iPhone: Complete Guide 2025',
-      slug: 'how-to-install-esim-iphone-2025',
-      excerpt: 'Step-by-step instructions for installing an eSIM on your iPhone. Works for iPhone XS and later models.',
-      content: '',
-      author: { name: 'AloTelcom Team' },
-      publishedAt: '2025-01-15',
-      category: 'Installation Guides',
-      tags: ['iphone', 'esim', 'installation', 'tutorial'],
-      readTime: 5,
-      featured: true,
-    },
-    {
-      id: '2',
-      title: 'Best eSIM Plans for Japan: Complete 2025 Guide',
-      slug: 'best-esim-plans-japan-2025',
-      excerpt: 'Everything you need to know about getting connected in Japan. Compare plans, prices, and coverage.',
-      content: '',
-      author: { name: 'AloTelcom Team' },
-      publishedAt: '2025-01-12',
-      category: 'Destination Guides',
-      tags: ['japan', 'travel', 'esim', 'destination'],
-      readTime: 8,
-      featured: true,
-    },
-    {
-      id: '3',
-      title: 'eSIM vs Physical SIM: Which is Better for Travel?',
-      slug: 'esim-vs-physical-sim-travel',
-      excerpt: 'Compare eSIM and physical SIM cards to decide which is best for your travel needs.',
-      content: '',
-      author: { name: 'AloTelcom Team' },
-      publishedAt: '2025-01-10',
-      category: 'Product Comparisons',
-      tags: ['comparison', 'esim', 'sim-card', 'travel'],
-      readTime: 6,
-    },
-    {
-      id: '4',
-      title: 'How to Avoid Roaming Charges: Complete Guide',
-      slug: 'how-to-avoid-roaming-charges',
-      excerpt: 'Learn how to stay connected abroad without paying expensive roaming fees from your home carrier.',
-      content: '',
-      author: { name: 'AloTelcom Team' },
-      publishedAt: '2025-01-08',
-      category: 'Travel Tips',
-      tags: ['roaming', 'travel', 'money-saving', 'tips'],
-      readTime: 7,
-    },
-    {
-      id: '5',
-      title: 'Digital Nomad Internet Guide: eSIM + VPN Setup',
-      slug: 'digital-nomad-internet-guide',
-      excerpt: 'Complete guide to staying connected and secure while working remotely from anywhere in the world.',
-      content: '',
-      author: { name: 'AloTelcom Team' },
-      publishedAt: '2025-01-05',
-      category: 'Travel Tips',
-      tags: ['digital-nomad', 'remote-work', 'vpn', 'esim'],
-      readTime: 10,
-    },
-    {
-      id: '6',
-      title: 'eSIM Troubleshooting: Common Issues and Solutions',
-      slug: 'esim-troubleshooting-guide',
-      excerpt: 'Fix common eSIM activation and connectivity issues with our comprehensive troubleshooting guide.',
-      content: '',
-      author: { name: 'AloTelcom Team' },
-      publishedAt: '2025-01-03',
-      category: 'Troubleshooting',
-      tags: ['troubleshooting', 'esim', 'help', 'support'],
-      readTime: 6,
-    },
-  ];
-
   useEffect(() => {
-    // Simulate loading
-    setTimeout(() => {
-      setPosts(mockPosts);
-      setFilteredPosts(mockPosts);
-      setLoading(false);
-    }, 500);
+    const loadPosts = async () => {
+      try {
+        setLoading(true);
+        const fetchedPosts = await fetchBlogPosts();
+        setPosts(fetchedPosts);
+        setFilteredPosts(fetchedPosts);
+      } catch (error) {
+        console.error('Error fetching blog posts:', error);
+        setPosts([]);
+        setFilteredPosts([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadPosts();
   }, []);
 
   useEffect(() => {

@@ -7,6 +7,8 @@ import { useApp } from '../store';
 import LoadingSpinner from '../components/LoadingSpinner';
 import { ProductCardSkeleton } from '../components/LoadingSkeleton';
 import { Plan } from '../types';
+import { getAllProducts } from '../lib/supabase-helpers';
+import { fetchCountryBySlug } from '../lib/country-helpers';
 
 interface CountryInfo {
   name: string;
@@ -28,89 +30,87 @@ const CountryPage: React.FC = () => {
   const { countrySlug } = useParams<{ countrySlug: string }>();
   const { addToCart } = useApp();
   const [countryInfo, setCountryInfo] = useState<CountryInfo | null>(null);
+  const [countryPlans, setCountryPlans] = useState<Plan[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
-  
-  // Generate mock plans for this country (in production, fetch from Supabase)
-  const generatePlansForCountry = (countryName: string, flag: string): Plan[] => {
-    const plans: Plan[] = [];
-    const dataOptions = ['1 GB', '3 GB', '5 GB', '10 GB', '20 GB'];
-    const validityOptions = ['7 Days', '15 Days', '30 Days'];
-    const prices = [4.50, 8.00, 12.00, 18.00, 28.00];
-    
-    dataOptions.forEach((data, idx) => {
-      validityOptions.forEach((validity, vIdx) => {
-        plans.push({
-          id: `${countryName.toLowerCase().replace(/\s+/g, '-')}-${data.toLowerCase().replace(/\s+/g, '-')}-${validity.toLowerCase().replace(/\s+/g, '-')}`,
-          type: 'esim',
-          country: countryName,
-          region: 'Local',
-          data,
-          validity,
-          price: prices[idx] + (vIdx * 2),
-          flag,
-          isPopular: idx === 2 && vIdx === 1,
-        });
-      });
-    });
-    return plans;
-  };
-
-  // Mock country data - In production, fetch from Supabase
-  const countryData: Record<string, CountryInfo> = {
-    japan: {
-      name: 'Japan',
-      slug: 'japan',
-      flag: '🇯🇵',
-      description: 'Stay connected in Japan with our reliable eSIM data plans. Perfect for tourists, business travelers, and digital nomads exploring the Land of the Rising Sun.',
-      networkOperators: ['NTT Docomo', 'SoftBank', 'KDDI (au)'],
-      coverage: ['Tokyo', 'Osaka', 'Kyoto', 'Hokkaido', 'Okinawa', 'All major cities'],
-      popularPlans: [
-        { id: 'jp-10gb', name: 'Japan 10GB', data: '10GB', validity: '30 days', price: 18 },
-        { id: 'jp-5gb', name: 'Japan 5GB', data: '5GB', validity: '30 days', price: 12 },
-        { id: 'jp-20gb', name: 'Japan 20GB', data: '20GB', validity: '30 days', price: 28 },
-      ],
-    },
-    'united-states': {
-      name: 'United States',
-      slug: 'united-states',
-      flag: '🇺🇸',
-      description: 'Get connected across all 50 states with our comprehensive US eSIM plans. Works with major carriers including AT&T, T-Mobile, and Verizon.',
-      networkOperators: ['AT&T', 'T-Mobile', 'Verizon'],
-      coverage: ['All 50 states', 'Major cities', 'Highways', 'Rural areas'],
-      popularPlans: [
-        { id: 'us-10gb', name: 'USA 10GB', data: '10GB', validity: '30 days', price: 25 },
-        { id: 'us-5gb', name: 'USA 5GB', data: '5GB', validity: '30 days', price: 15 },
-        { id: 'us-unlimited', name: 'USA Unlimited', data: 'Unlimited', validity: '30 days', price: 45 },
-      ],
-    },
-    turkey: {
-      name: 'Turkey',
-      slug: 'turkey',
-      flag: '🇹🇷',
-      description: 'Explore Turkey with reliable connectivity. Our eSIM plans work across Istanbul, Cappadocia, and all major tourist destinations.',
-      networkOperators: ['Turkcell', 'Vodafone TR', 'Türk Telekom'],
-      coverage: ['Istanbul', 'Ankara', 'Izmir', 'Cappadocia', 'Antalya'],
-      popularPlans: [
-        { id: 'tr-10gb', name: 'Turkey 10GB', data: '10GB', validity: '30 days', price: 12 },
-        { id: 'tr-5gb', name: 'Turkey 5GB', data: '5GB', validity: '30 days', price: 8 },
-      ],
-    },
-  };
 
   useEffect(() => {
-    // Simulate loading
-    setTimeout(() => {
-      const data = countryData[countrySlug || ''];
-      if (data) {
-        setCountryInfo(data);
+    const loadCountryData = async () => {
+      if (!countrySlug) {
+        setLoading(false);
+        return;
       }
-      setLoading(false);
-    }, 500);
-  }, [countrySlug]);
 
-  // Generate plans for the current country
-  const countryPlans = countryInfo ? generatePlansForCountry(countryInfo.name, countryInfo.flag) : [];
+      try {
+        setLoading(true);
+        
+        // Fetch country info from database
+        const country = await fetchCountryBySlug(countrySlug);
+        
+        // Fetch all products and filter by country
+        const allProducts = await getAllProducts();
+        const countryName = country?.name || countrySlug.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+        
+        // Filter products for this country (eSIM type, matching country name)
+        const filteredPlans = allProducts.filter(p => 
+          p.type === 'esim' && 
+          p.country.toLowerCase() === countryName.toLowerCase()
+        );
+
+        if (country) {
+          setCountryInfo({
+            name: country.name,
+            slug: country.slug,
+            flag: country.flag,
+            description: country.description || `Stay connected in ${country.name} with our reliable eSIM data plans.`,
+            networkOperators: country.networkOperators || [],
+            coverage: country.coverage || [],
+            popularPlans: filteredPlans
+              .filter(p => p.isPopular)
+              .slice(0, 3)
+              .map(p => ({
+                id: p.id,
+                name: `${country.name} ${p.data}`,
+                data: p.data,
+                validity: p.validity,
+                price: p.price,
+              })),
+          });
+        } else {
+          // Fallback: derive country info from products
+          const firstPlan = filteredPlans[0];
+          if (firstPlan) {
+            setCountryInfo({
+              name: countryName,
+              slug: countrySlug,
+              flag: firstPlan.flag || '🌐',
+              description: `Stay connected in ${countryName} with our reliable eSIM data plans.`,
+              networkOperators: firstPlan.operators?.map(op => op.name) || [],
+              coverage: firstPlan.coveredCountries || [countryName],
+              popularPlans: filteredPlans
+                .filter(p => p.isPopular)
+                .slice(0, 3)
+                .map(p => ({
+                  id: p.id,
+                  name: `${countryName} ${p.data}`,
+                  data: p.data,
+                  validity: p.validity,
+                  price: p.price,
+                })),
+            });
+          }
+        }
+
+        setCountryPlans(filteredPlans);
+      } catch (error) {
+        console.error('Error loading country data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadCountryData();
+  }, [countrySlug]);
 
   if (loading) {
     return (

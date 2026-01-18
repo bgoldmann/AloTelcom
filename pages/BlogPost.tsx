@@ -4,6 +4,7 @@ import { Calendar, Clock, User, Tag, ArrowLeft, Share2, BookOpen } from 'lucide-
 import { SEO } from '../lib/seo';
 import { ArticleSchemaScript, BreadcrumbSchemaScript } from '../lib/schema';
 import LoadingSpinner from '../components/LoadingSpinner';
+import { fetchBlogPostBySlug } from '../lib/blog-helpers';
 
 interface BlogPost {
   id: string;
@@ -34,91 +35,27 @@ const BlogPost: React.FC = () => {
   const [post, setPost] = useState<BlogPost | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Mock post data - In production, fetch from Supabase
-  const mockPost: BlogPost = {
-    id: '1',
-    title: 'How to Install eSIM on iPhone: Complete Guide 2025',
-    slug: 'how-to-install-esim-iphone-2025',
-    excerpt: 'Step-by-step instructions for installing an eSIM on your iPhone. Works for iPhone XS and later models.',
-    content: `
-# How to Install eSIM on iPhone: Complete Guide 2025
-
-Installing an eSIM on your iPhone is quick and easy. This guide will walk you through the entire process step by step.
-
-## What You'll Need
-
-- An iPhone XS or later (iPhone XS, XS Max, XR, 11, 12, 13, 14, 15, or newer)
-- A stable Wi-Fi or cellular connection
-- The QR code from your eSIM purchase email
-
-## Step-by-Step Installation
-
-### Step 1: Open Settings
-1. Open the **Settings** app on your iPhone
-2. Tap **Cellular** (or **Mobile Data** in some regions)
-
-### Step 2: Add Cellular Plan
-1. Tap **Add Cellular Plan**
-2. You'll see options to scan a QR code or enter details manually
-
-### Step 3: Scan QR Code
-1. Open the email with your eSIM QR code
-2. Tap **Scan QR Code** in Settings
-3. Point your camera at the QR code
-4. Wait for the eSIM to download
-
-### Step 4: Configure Your eSIM
-1. Label your eSIM (e.g., "Travel Data" or "Japan eSIM")
-2. Choose your default line for:
-   - **Cellular Data**: Which line to use for data
-   - **Default Voice Line**: Which line to use for calls
-   - **iMessage & FaceTime**: Which number to use
-
-### Step 5: Activate
-1. Tap **Done**
-2. Your eSIM is now active and ready to use!
-
-## Tips for Using eSIM
-
-- **Dual SIM**: You can use both your physical SIM and eSIM simultaneously
-- **Switching**: Go to Settings > Cellular to switch between lines
-- **Data Roaming**: Make sure data roaming is enabled for your eSIM line
-- **Labeling**: Use clear labels to identify which line is which
-
-## Troubleshooting
-
-If you encounter issues:
-
-1. **QR Code Not Scanning**: Try entering the activation code manually
-2. **eSIM Not Activating**: Ensure you have a stable internet connection
-3. **Can't Find Add Cellular Plan**: Make sure your iPhone supports eSIM
-4. **Download Failed**: Check your internet connection and try again
-
-## Need Help?
-
-If you're still having trouble, contact our support team at support@alotelcom.com or visit our Help Center.
-    `,
-    author: {
-      name: 'AloTelcom Team',
-      bio: 'Expert team helping travelers stay connected worldwide',
-    },
-    publishedAt: '2025-01-15T10:00:00Z',
-    updatedAt: '2025-01-15T10:00:00Z',
-    category: 'Installation Guides',
-    tags: ['iphone', 'esim', 'installation', 'tutorial'],
-    readTime: 5,
-    relatedPosts: [
-      { id: '2', title: 'How to Install eSIM on Android', slug: 'how-to-install-esim-android' },
-      { id: '3', title: 'eSIM Troubleshooting Guide', slug: 'esim-troubleshooting-guide' },
-    ],
-  };
-
   useEffect(() => {
-    // Simulate loading and fetch post
-    setTimeout(() => {
-      setPost(mockPost);
-      setLoading(false);
-    }, 500);
+    const loadPost = async () => {
+      if (!slug) {
+        setLoading(false);
+        return;
+      }
+
+      try {
+        setLoading(true);
+        const fetchedPost = await fetchBlogPostBySlug(slug);
+        if (fetchedPost) {
+          setPost(fetchedPost);
+        }
+      } catch (error) {
+        console.error('Error fetching blog post:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadPost();
   }, [slug]);
 
   if (loading) {

@@ -86,7 +86,7 @@ export class TelnyxProvider extends BaseProvider {
     }
 
     try {
-      // TODO: Replace with actual Telnyx API call when credentials are available
+      // API credentials are configured - using actual Telnyx Messaging API
       const response = await this.apiRequest<{
         data?: {
           id: string;
@@ -161,7 +161,7 @@ export class TelnyxProvider extends BaseProvider {
     }
 
     try {
-      // TODO: Replace with actual Telnyx API call when credentials are available
+      // API credentials are configured - using actual Telnyx Messaging API
       const response = await this.apiRequest<{
         data?: {
           id: string;
@@ -222,18 +222,15 @@ export class TelnyxProvider extends BaseProvider {
     }
 
     try {
-      // TODO: Implement actual Telnyx API call
-      // 1. Search for available numbers
-      // 2. Purchase number
-      // 3. Configure features
-
-      // Placeholder
-      return {
-        number: `+1${Math.floor(Math.random() * 10000000000)}`, // Placeholder
-        countryCode: config.countryCode,
-        provider: this.name,
-        features: config.features || [],
-      };
+      // TODO: Implement actual Telnyx Phone Numbers API call
+      // API credentials are configured - implement using:
+      // 1. POST /v2/available_phone_numbers to search
+      // 2. POST /v2/phone_numbers to purchase
+      // 3. PATCH /v2/phone_numbers/{id} to configure features
+      // Reference: https://developers.telnyx.com/docs/api/v2/telephony
+      
+      // Temporary: Return error until implementation is complete
+      throw new Error('Phone number creation not yet implemented. Please implement using Telnyx Phone Numbers API.');
     } catch (error: any) {
       console.error('Failed to create phone number via Telnyx', error);
       throw error;
@@ -249,21 +246,13 @@ export class TelnyxProvider extends BaseProvider {
     }
 
     try {
-      // TODO: Implement actual Telnyx API call
-      // const response = await this.apiRequest<{
-      //   data: Array<{ phone_number: string; features: string[] }>;
-      // }>(
-      //   `${this.getBaseUrl()}/available_phone_numbers?filter[country_code]=${countryCode}`,
-      //   { headers: this.getAuthHeaders() }
-      // );
-      // return response.data.map(n => ({
-      //   number: n.phone_number,
-      //   countryCode,
-      //   provider: this.name,
-      //   features: n.features,
-      // }));
-
-      // Placeholder
+      // TODO: Implement actual Telnyx Phone Numbers API call
+      // API credentials are configured - implement using:
+      // GET /v2/available_phone_numbers?filter[country_code]={countryCode}
+      // Reference: https://developers.telnyx.com/docs/api/v2/telephony
+      
+      // Temporary: Return empty array until implementation is complete
+      console.warn('listAvailableNumbers not yet implemented - returning empty array');
       return [];
     } catch (error: any) {
       console.error(`Failed to list available numbers for ${countryCode}`, error);
@@ -297,7 +286,7 @@ export class TelnyxProvider extends BaseProvider {
         ? `${this.getBaseUrl()}/verifications/voice`
         : `${this.getBaseUrl()}/verifications/sms`;
 
-      // TODO: Replace with actual Telnyx API call when credentials are available
+      // API credentials are configured - using actual Telnyx Messaging API
       const response = await this.apiRequest<{
         data?: {
           id: string;
@@ -366,7 +355,7 @@ export class TelnyxProvider extends BaseProvider {
     }
 
     try {
-      // TODO: Replace with actual Telnyx API call when credentials are available
+      // API credentials are configured - using actual Telnyx Messaging API
       const response = await this.apiRequest<{
         data?: {
           phone_number: string;

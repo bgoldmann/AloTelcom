@@ -5,6 +5,8 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { Search, X, Zap, Globe, Signal, ChevronLeft, Map, Phone, Shield, Mic, CheckCircle, ArrowRight, Info, Star, Share2, Wifi, MessageSquare, Image, Key } from 'lucide-react';
 import { Plan, Review } from '../types';
 import { useApp } from '../store';
+import { getAllProducts } from '../lib/supabase-helpers';
+import { LoadingSpinner } from '../components/LoadingSpinner';
 
 // Helper function to create dynamic styles for animations
 const createAnimationStyle = (delay: number): React.CSSProperties => ({
@@ -22,309 +24,7 @@ const createTabIndicatorStyle = (tab: 'local' | 'regional' | 'global'): React.CS
   transform: 'var(--tab-indicator-transform)',
 } as React.CSSProperties);
 
-// --- MOCK DATA GENERATORS ---
-
-const MOCK_REVIEWS: Review[] = [
-  { id: '1', user: 'Alex M.', rating: 5, comment: 'Worked perfectly immediately after landing.', date: '2 days ago' },
-  { id: '2', user: 'Sarah J.', rating: 4, comment: 'Good speeds, slightly tricky setup on Android but support helped.', date: '1 week ago' },
-  { id: '3', user: 'David K.', rating: 5, comment: 'Much cheaper than roaming. Will use again.', date: '2 weeks ago' },
-];
-
-const generateLocalPlans = (): Plan[] => {
-  const countries = [
-    { name: 'United States', flag: '🇺🇸', region: 'Americas', id: 'us', networks: [{name: 'AT&T', type: '5G'}, {name: 'T-Mobile', type: '5G'}] },
-    { name: 'United Kingdom', flag: '🇬🇧', region: 'Europe', id: 'uk', networks: [{name: 'Vodafone', type: '5G'}, {name: 'O2', type: '4G'}] },
-    { name: 'Turkey', flag: '🇹🇷', region: 'Middle East', id: 'tr', networks: [{name: 'Turkcell', type: 'LTE'}, {name: 'Vodafone TR', type: '4G'}] },
-    { name: 'France', flag: '🇫🇷', region: 'Europe', id: 'fr', networks: [{name: 'Orange', type: '5G'}, {name: 'SFR', type: 'LTE'}] },
-    { name: 'Germany', flag: '🇩🇪', region: 'Europe', id: 'de', networks: [{name: 'Telekom', type: '5G'}, {name: 'O2', type: 'LTE'}] },
-    { name: 'Japan', flag: '🇯🇵', region: 'Asia', id: 'jp', networks: [{name: 'SoftBank', type: 'LTE'}, {name: 'KDDI', type: '5G'}] },
-    { name: 'Italy', flag: '🇮🇹', region: 'Europe', id: 'it', networks: [{name: 'TIM', type: '5G'}, {name: 'Vodafone', type: '4G'}] },
-    { name: 'Spain', flag: '🇪🇸', region: 'Europe', id: 'es', networks: [{name: 'Movistar', type: '5G'}, {name: 'Orange', type: 'LTE'}] },
-    { name: 'Canada', flag: '🇨🇦', region: 'Americas', id: 'ca', networks: [{name: 'Rogers', type: '5G'}, {name: 'Bell', type: 'LTE'}] },
-    { name: 'Thailand', flag: '🇹🇭', region: 'Asia', id: 'th', networks: [{name: 'AIS', type: '5G'}, {name: 'DTAC', type: 'LTE'}] },
-    { name: 'Australia', flag: '🇦🇺', region: 'Oceania', id: 'au', networks: [{name: 'Telstra', type: '5G'}, {name: 'Optus', type: '5G'}] },
-    { name: 'Singapore', flag: '🇸🇬', region: 'Asia', id: 'sg', networks: [{name: 'Singtel', type: '5G'}, {name: 'StarHub', type: '5G'}] },
-    { name: 'South Korea', flag: '🇰🇷', region: 'Asia', id: 'kr', networks: [{name: 'SK Telecom', type: '5G'}, {name: 'KT', type: '5G'}] },
-    { name: 'India', flag: '🇮🇳', region: 'Asia', id: 'in', networks: [{name: 'Jio', type: '5G'}, {name: 'Airtel', type: '4G'}] },
-    { name: 'China', flag: '🇨🇳', region: 'Asia', id: 'cn', networks: [{name: 'China Mobile', type: '5G'}, {name: 'China Unicom', type: '4G'}] },
-    { name: 'Netherlands', flag: '🇳🇱', region: 'Europe', id: 'nl', networks: [{name: 'KPN', type: '5G'}, {name: 'Vodafone', type: '5G'}] },
-    { name: 'Switzerland', flag: '🇨🇭', region: 'Europe', id: 'ch', networks: [{name: 'Swisscom', type: '5G'}, {name: 'Sunrise', type: '5G'}] },
-    { name: 'Austria', flag: '🇦🇹', region: 'Europe', id: 'at', networks: [{name: 'A1', type: '5G'}, {name: 'T-Mobile', type: '4G'}] },
-    { name: 'Belgium', flag: '🇧🇪', region: 'Europe', id: 'be', networks: [{name: 'Proximus', type: '5G'}, {name: 'Orange', type: '4G'}] },
-    { name: 'Portugal', flag: '🇵🇹', region: 'Europe', id: 'pt', networks: [{name: 'MEO', type: '5G'}, {name: 'Vodafone', type: '4G'}] },
-    { name: 'Greece', flag: '🇬🇷', region: 'Europe', id: 'gr', networks: [{name: 'Cosmote', type: '5G'}, {name: 'Vodafone', type: '4G'}] },
-    { name: 'Poland', flag: '🇵🇱', region: 'Europe', id: 'pl', networks: [{name: 'Orange', type: '5G'}, {name: 'Play', type: '4G'}] },
-    { name: 'Czech Republic', flag: '🇨🇿', region: 'Europe', id: 'cz', networks: [{name: 'O2', type: '5G'}, {name: 'T-Mobile', type: '4G'}] },
-    { name: 'UAE', flag: '🇦🇪', region: 'Middle East', id: 'ae', networks: [{name: 'Etisalat', type: '5G'}, {name: 'du', type: '5G'}] },
-    { name: 'Saudi Arabia', flag: '🇸🇦', region: 'Middle East', id: 'sa', networks: [{name: 'STC', type: '5G'}, {name: 'Zain', type: '4G'}] },
-    { name: 'Israel', flag: '🇮🇱', region: 'Middle East', id: 'il', networks: [{name: 'Partner', type: '5G'}, {name: 'Cellcom', type: '4G'}] },
-    { name: 'Egypt', flag: '🇪🇬', region: 'Middle East', id: 'eg', networks: [{name: 'Orange', type: '4G'}, {name: 'Vodafone', type: '4G'}] },
-    { name: 'South Africa', flag: '🇿🇦', region: 'Africa', id: 'za', networks: [{name: 'Vodacom', type: '5G'}, {name: 'MTN', type: '4G'}] },
-    { name: 'Mexico', flag: '🇲🇽', region: 'Americas', id: 'mx', networks: [{name: 'Telcel', type: '5G'}, {name: 'Movistar', type: '4G'}] },
-    { name: 'Brazil', flag: '🇧🇷', region: 'Americas', id: 'br', networks: [{name: 'Vivo', type: '5G'}, {name: 'Claro', type: '4G'}] },
-    { name: 'Argentina', flag: '🇦🇷', region: 'Americas', id: 'ar', networks: [{name: 'Movistar', type: '5G'}, {name: 'Claro', type: '4G'}] },
-    { name: 'Chile', flag: '🇨🇱', region: 'Americas', id: 'cl', networks: [{name: 'Entel', type: '5G'}, {name: 'Movistar', type: '4G'}] },
-    { name: 'New Zealand', flag: '🇳🇿', region: 'Oceania', id: 'nz', networks: [{name: 'Spark', type: '5G'}, {name: 'Vodafone', type: '4G'}] },
-    { name: 'Indonesia', flag: '🇮🇩', region: 'Asia', id: 'id', networks: [{name: 'Telkomsel', type: '5G'}, {name: 'Indosat', type: '4G'}] },
-    { name: 'Malaysia', flag: '🇲🇾', region: 'Asia', id: 'my', networks: [{name: 'Maxis', type: '5G'}, {name: 'Celcom', type: '4G'}] },
-    { name: 'Philippines', flag: '🇵🇭', region: 'Asia', id: 'ph', networks: [{name: 'Globe', type: '5G'}, {name: 'Smart', type: '4G'}] },
-    { name: 'Vietnam', flag: '🇻🇳', region: 'Asia', id: 'vn', networks: [{name: 'Viettel', type: '5G'}, {name: 'Vinaphone', type: '4G'}] },
-    { name: 'Hong Kong', flag: '🇭🇰', region: 'Asia', id: 'hk', networks: [{name: 'CSL', type: '5G'}, {name: '3', type: '5G'}] },
-    { name: 'Taiwan', flag: '🇹🇼', region: 'Asia', id: 'tw', networks: [{name: 'Chunghwa', type: '5G'}, {name: 'FarEasTone', type: '5G'}] },
-  ];
-
-  const plans: Plan[] = [];
-  countries.forEach(c => {
-    const baseFields = {
-      country: c.name,
-      region: c.region,
-      flag: c.flag,
-      type: 'esim' as const,
-      operators: c.networks as any[],
-      reviews: MOCK_REVIEWS,
-      description: `Stay connected in ${c.name} with high-speed data. Ideal for tourists and business travelers.`,
-      coveredCountries: [c.name]
-    };
-
-    plans.push(
-      { ...baseFields, id: `${c.id}-1gb`, data: '1GB', validity: '7 Days', price: 4.50 },
-      { ...baseFields, id: `${c.id}-3gb`, data: '3GB', validity: '30 Days', price: 10.00, isPopular: true },
-      { ...baseFields, id: `${c.id}-10gb`, data: '10GB', validity: '30 Days', price: 25.00 }
-    );
-  });
-  return plans;
-};
-
-const generateRegionalPlans = (): Plan[] => {
-  const regions = [
-    { name: 'Eurolink', country: 'Europe', flag: '🇪🇺', id: 'eu', coverage: ['France', 'Germany', 'Italy', 'Spain', 'UK', '+30 others'] },
-    { name: 'Asialink', country: 'Asia', flag: '🌏', id: 'as', coverage: ['Japan', 'Thailand', 'Singapore', 'China', 'Korea', '+10 others'] },
-    { name: 'Latamlink', country: 'Latin America', flag: '🌎', id: 'la', coverage: ['Brazil', 'Mexico', 'Argentina', 'Chile', 'Peru', '+8 others'] },
-    { name: 'Menalink', country: 'Middle East & North Africa', flag: '🌍', id: 'me', coverage: ['Turkey', 'UAE', 'Saudi Arabia', 'Egypt', 'Qatar'] },
-  ];
-  const plans: Plan[] = [];
-  regions.forEach(r => {
-    const baseFields = {
-      country: r.country,
-      region: r.name,
-      flag: r.flag,
-      type: 'esim' as const,
-      operators: [{name: 'Multi-Network', type: 'LTE'}] as any[],
-      reviews: MOCK_REVIEWS,
-      description: `Access internet across multiple countries in ${r.country} with a single eSIM.`,
-      coveredCountries: r.coverage
-    };
-    plans.push(
-      { ...baseFields, id: `${r.id}-1gb`, data: '1GB', validity: '7 Days', price: 5.00 },
-      { ...baseFields, id: `${r.id}-10gb`, data: '10GB', validity: '30 Days', price: 30.00 }
-    );
-  });
-  return plans;
-};
-
-const generateGlobalPlans = (): Plan[] => {
-   return [
-      { 
-        id: 'global-1gb', type: 'esim', country: '84 Countries', region: 'Global', data: '1GB', validity: '7 Days', price: 9.00, flag: '🌐',
-        description: 'The ultimate travel companion. Works in 84+ countries worldwide.',
-        operators: [{name: 'Global Partner Networks', type: 'LTE'}],
-        reviews: MOCK_REVIEWS,
-        coveredCountries: ['USA', 'UK', 'EU', 'Japan', 'Australia', 'Canada', '...and 78 more']
-      },
-      { 
-        id: 'global-10gb', type: 'esim', country: '84 Countries', region: 'Global', data: '10GB', validity: '60 Days', price: 59.00, flag: '🌐',
-        description: 'The ultimate travel companion. Works in 84+ countries worldwide.',
-        operators: [{name: 'Global Partner Networks', type: 'LTE'}],
-        reviews: MOCK_REVIEWS,
-        coveredCountries: ['USA', 'UK', 'EU', 'Japan', 'Australia', 'Canada', '...and 78 more']
-      },
-   ];
-};
-
-const generateNumberPlans = (): Plan[] => {
-  return [
-    { id: 'num-us', type: 'number', country: 'United States', region: 'Americas', data: '+1 (Voice/SMS)', validity: '30 Days', price: 5.00, flag: '🇺🇸', features: ['Receive SMS', 'Voicemail', 'Call Forwarding'], description: 'Get a real US phone number for verification and calls.' },
-    { id: 'num-uk', type: 'number', country: 'United Kingdom', region: 'Europe', data: '+44 (Voice/SMS)', validity: '30 Days', price: 6.50, flag: '🇬🇧', features: ['Receive SMS', 'Voicemail'], description: 'UK Mobile number (+44) compatible with most services.' },
-    { id: 'num-ca', type: 'number', country: 'Canada', region: 'Americas', data: '+1 (Voice/SMS)', validity: '30 Days', price: 5.50, flag: '🇨🇦', features: ['Receive SMS', 'Voicemail'], description: 'Canadian virtual number for privacy and travel.' },
-    { id: 'num-au', type: 'number', country: 'Australia', region: 'Oceania', data: '+61 (Voice/SMS)', validity: '30 Days', price: 7.00, flag: '🇦🇺', features: ['Receive SMS', 'Voicemail'], description: 'Australian mobile number.' },
-  ];
-};
-
-const generateVpnPlans = (): Plan[] => {
-  return [
-    { id: 'vpn-basic', type: 'vpn', country: 'Global Servers', region: 'Global', data: 'Standard Speed', validity: '1 Month', price: 3.99, flag: '🛡️', features: ['3 Devices', '20+ Locations', 'No Logs'], isPopular: false, description: 'Basic protection for casual browsing.' },
-    { id: 'vpn-pro', type: 'vpn', country: 'Global Servers', region: 'Global', data: 'High Speed', validity: '1 Month', price: 7.99, flag: '🛡️', features: ['Unlimited Devices', '100+ Locations', 'Ad Blocker', 'Streaming Optimized'], isPopular: true, description: 'Complete security suite for power users.' },
-    { id: 'vpn-year', type: 'vpn', country: 'Global Servers', region: 'Global', data: 'High Speed', validity: '1 Year', price: 49.99, flag: '🛡️', features: ['Unlimited Devices', '100+ Locations', 'Ad Blocker', '2 Months Free'], description: 'Best value for long-term protection.' },
-  ];
-};
-
-const generateVoipPlans = (): Plan[] => {
-  return [
-    { id: 'voip-100', type: 'voip', country: 'World Credits', region: 'Global', data: '100 Minutes', validity: 'No Expiry', price: 5.00, flag: '📞', features: ['Call Landlines', 'Call Mobiles', 'Crystal Clear Audio'], description: 'Call any phone in the world over the internet.' },
-    { id: 'voip-500', type: 'voip', country: 'World Credits', region: 'Global', data: '500 Minutes', validity: 'No Expiry', price: 20.00, flag: '📞', features: ['Call Landlines', 'Call Mobiles', 'Best Value'], isPopular: true, description: 'Bulk credits for frequent callers.' },
-    { id: 'voip-unl-us', type: 'voip', country: 'USA Calling', region: 'Americas', data: 'Unlimited', validity: '30 Days', price: 12.00, flag: '🇺🇸', features: ['Calls to USA/Canada', 'Fair Usage Apply'], description: 'Unlimited calls to +1 numbers.' },
-  ];
-};
-
-const generateSmsPlans = (): Plan[] => {
-  return [
-    { 
-      id: 'sms-single', 
-      type: 'sms', 
-      country: 'Global SMS', 
-      region: 'Worldwide', 
-      data: '1 Message', 
-      validity: 'Instant Delivery', 
-      price: 0.05, 
-      flag: '💬', 
-      features: ['Instant Delivery', 'Global Coverage', 'Delivery Reports'], 
-      isPopular: false, 
-      description: 'Send a single SMS message to any phone number worldwide. Perfect for notifications and alerts.',
-      phoneNumber: '', // To be provided by user
-      fromNumber: '' // To be provided by user
-    },
-    { 
-      id: 'sms-100', 
-      type: 'sms', 
-      country: 'Global SMS', 
-      region: 'Worldwide', 
-      data: '100 Messages', 
-      validity: 'No Expiry', 
-      price: 4.00, 
-      flag: '💬', 
-      features: ['Bulk Messaging', 'API Access', 'Delivery Reports'], 
-      isPopular: true, 
-      description: 'Send 100 SMS messages. Great for small businesses and developers.',
-      phoneNumber: '',
-      fromNumber: ''
-    },
-    { 
-      id: 'sms-1000', 
-      type: 'sms', 
-      country: 'Global SMS', 
-      region: 'Worldwide', 
-      data: '1000 Messages', 
-      validity: 'No Expiry', 
-      price: 35.00, 
-      flag: '💬', 
-      features: ['High Volume', 'API Access', 'Priority Delivery'], 
-      isPopular: false, 
-      description: 'Best value for high-volume messaging. Perfect for businesses and marketing campaigns.',
-      phoneNumber: '',
-      fromNumber: ''
-    },
-  ];
-};
-
-const generateMmsPlans = (): Plan[] => {
-  return [
-    { 
-      id: 'mms-single', 
-      type: 'mms', 
-      country: 'Global MMS', 
-      region: 'Worldwide', 
-      data: '1 Message', 
-      validity: 'Instant Delivery', 
-      price: 0.25, 
-      flag: '📷', 
-      features: ['Image Support', 'Video Support', 'Global Coverage'], 
-      isPopular: false, 
-      description: 'Send a single MMS message with images or videos to any phone number worldwide.',
-      phoneNumber: '',
-      fromNumber: ''
-    },
-    { 
-      id: 'mms-50', 
-      type: 'mms', 
-      country: 'Global MMS', 
-      region: 'Worldwide', 
-      data: '50 Messages', 
-      validity: 'No Expiry', 
-      price: 10.00, 
-      flag: '📷', 
-      features: ['Media Sharing', 'API Access', 'Delivery Reports'], 
-      isPopular: true, 
-      description: 'Send 50 MMS messages with photos, videos, or audio. Great for marketing and notifications.',
-      phoneNumber: '',
-      fromNumber: ''
-    },
-    { 
-      id: 'mms-500', 
-      type: 'mms', 
-      country: 'Global MMS', 
-      region: 'Worldwide', 
-      data: '500 Messages', 
-      validity: 'No Expiry', 
-      price: 75.00, 
-      flag: '📷', 
-      features: ['High Volume', 'Media Support', 'Priority Delivery'], 
-      isPopular: false, 
-      description: 'Best value for high-volume MMS messaging. Perfect for marketing campaigns and media sharing.',
-      phoneNumber: '',
-      fromNumber: ''
-    },
-  ];
-};
-
-const generate2FAPlans = (): Plan[] => {
-  return [
-    { 
-      id: '2fa-sms', 
-      type: '2fa', 
-      country: '2FA Verification', 
-      region: 'Worldwide', 
-      data: 'SMS Code', 
-      validity: '5 Minutes', 
-      price: 0.05, 
-      flag: '🔐', 
-      features: ['6-Digit Code', '5 Min Expiry', 'SMS Delivery'], 
-      isPopular: true, 
-      description: 'Send a 2FA verification code via SMS. Secure and reliable for account verification.',
-      phoneNumber: '', // To be provided by user
-      channel: 'sms'
-    },
-    { 
-      id: '2fa-voice', 
-      type: '2fa', 
-      country: '2FA Verification', 
-      region: 'Worldwide', 
-      data: 'Voice Code', 
-      validity: '5 Minutes', 
-      price: 0.10, 
-      flag: '🔐', 
-      features: ['6-Digit Code', 'Voice Call', '5 Min Expiry'], 
-      isPopular: false, 
-      description: 'Receive a 2FA verification code via automated voice call. Perfect for users without SMS access.',
-      phoneNumber: '',
-      channel: 'voice'
-    },
-    { 
-      id: '2fa-flash', 
-      type: '2fa', 
-      country: '2FA Verification', 
-      region: 'Supported Countries', 
-      data: 'Flash Call', 
-      validity: '5 Minutes', 
-      price: 0.08, 
-      flag: '🔐', 
-      features: ['Instant Verification', 'No SMS Needed', '5 Min Expiry'], 
-      isPopular: false, 
-      description: 'Flash call verification - no SMS needed. Phone rings once and auto-verifies. Available in select countries.',
-      phoneNumber: '',
-      channel: 'flash_call'
-    },
-  ];
-};
-
-const LOCAL_PLANS = generateLocalPlans();
-const REGIONAL_PLANS = generateRegionalPlans();
-const GLOBAL_PLANS = generateGlobalPlans();
-const NUMBER_PLANS = generateNumberPlans();
-const VPN_PLANS = generateVpnPlans();
-const VOIP_PLANS = generateVoipPlans();
-const SMS_PLANS = generateSmsPlans();
-const MMS_PLANS = generateMmsPlans();
-const TWOFA_PLANS = generate2FAPlans();
+// Products are now fetched from database
 
 type Category = 'esim' | 'number' | 'vpn' | 'voip' | 'sms' | 'mms' | '2fa';
 type EsimTab = 'local' | 'regional' | 'global';
@@ -339,6 +39,9 @@ const Marketplace: React.FC = () => {
   const [activeCategory, setActiveCategory] = useState<Category>('esim');
   const [esimTab, setEsimTab] = useState<EsimTab>('local');
   const [searchTerm, setSearchTerm] = useState(initialSearch);
+  const [allProducts, setAllProducts] = useState<Plan[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   
   // Selection State (Master-Detail for eSIM)
   const [selectedCountryName, setSelectedCountryName] = useState<string | null>(null);
@@ -346,61 +49,91 @@ const Marketplace: React.FC = () => {
   // Modal State
   const [selectedPlanForDetail, setSelectedPlanForDetail] = useState<Plan | null>(null);
 
+  // Fetch products from database
   useEffect(() => {
-    if (initialSearch) {
-       // Search logic to auto-switch tabs
-       const lower = initialSearch.toLowerCase();
-       
-       const inNumbers = NUMBER_PLANS.some(p => p.country.toLowerCase().includes(lower));
-       if (inNumbers) { setActiveCategory('number'); return; }
+    const fetchProducts = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const products = await getAllProducts();
+        setAllProducts(products);
+      } catch (err) {
+        console.error('Error fetching products:', err);
+        setError('Failed to load products. Please try again later.');
+      } finally {
+        setLoading(false);
+      }
+    };
 
-       const inVpn = VPN_PLANS.some(p => p.data.toLowerCase().includes(lower));
-       if (inVpn) { setActiveCategory('vpn'); return; }
+    fetchProducts();
+  }, []);
 
-       const inVoip = VOIP_PLANS.some(p => p.country.toLowerCase().includes(lower) || p.data.toLowerCase().includes(lower));
-       if (inVoip) { setActiveCategory('voip'); return; }
+  // Auto-switch category based on search term
+  useEffect(() => {
+    if (initialSearch && allProducts.length > 0) {
+      const lower = initialSearch.toLowerCase();
+      
+      // Check which category matches the search
+      const hasNumber = allProducts.some(p => p.type === 'number' && (p.country.toLowerCase().includes(lower) || p.data.toLowerCase().includes(lower)));
+      if (hasNumber) { setActiveCategory('number'); return; }
 
-       const inSms = SMS_PLANS.some(p => p.type === 'sms' || lower.includes('sms') || lower.includes('text message'));
-       if (inSms) { setActiveCategory('sms'); return; }
+      const hasVpn = allProducts.some(p => p.type === 'vpn' && (p.data.toLowerCase().includes(lower) || p.country.toLowerCase().includes(lower)));
+      if (hasVpn) { setActiveCategory('vpn'); return; }
 
-       const inMms = MMS_PLANS.some(p => p.type === 'mms' || lower.includes('mms') || lower.includes('multimedia'));
-       if (inMms) { setActiveCategory('mms'); return; }
+      const hasVoip = allProducts.some(p => p.type === 'voip' && (p.country.toLowerCase().includes(lower) || p.data.toLowerCase().includes(lower)));
+      if (hasVoip) { setActiveCategory('voip'); return; }
 
-       const in2fa = TWOFA_PLANS.some(p => p.type === '2fa' || lower.includes('2fa') || lower.includes('verification') || lower.includes('authentication'));
-       if (in2fa) { setActiveCategory('2fa'); return; }
+      const hasSms = allProducts.some(p => p.type === 'sms') || lower.includes('sms') || lower.includes('text message');
+      if (hasSms) { setActiveCategory('sms'); return; }
 
-       const inLocal = LOCAL_PLANS.some(p => p.country.toLowerCase().includes(lower));
-       if (inLocal) { setActiveCategory('esim'); setEsimTab('local'); return; }
+      const hasMms = allProducts.some(p => p.type === 'mms') || lower.includes('mms') || lower.includes('multimedia');
+      if (hasMms) { setActiveCategory('mms'); return; }
 
-       const inRegional = REGIONAL_PLANS.some(p => p.region.toLowerCase().includes(lower));
-       if (inRegional) { setActiveCategory('esim'); setEsimTab('regional'); return; }
+      const has2fa = allProducts.some(p => p.type === '2fa') || lower.includes('2fa') || lower.includes('verification') || lower.includes('authentication');
+      if (has2fa) { setActiveCategory('2fa'); return; }
+
+      // For eSIM, check if it's local or regional
+      const esimProducts = allProducts.filter(p => p.type === 'esim');
+      const inLocal = esimProducts.some(p => p.country.toLowerCase().includes(lower) && p.region !== 'Global' && p.region !== 'Eurolink' && p.region !== 'Asialink' && p.region !== 'Latamlink' && p.region !== 'Menalink');
+      if (inLocal) { setActiveCategory('esim'); setEsimTab('local'); return; }
+
+      const inRegional = esimProducts.some(p => p.region.toLowerCase().includes(lower) || ['Eurolink', 'Asialink', 'Latamlink', 'Menalink'].some(r => p.region.includes(r)));
+      if (inRegional) { setActiveCategory('esim'); setEsimTab('regional'); return; }
+
+      const inGlobal = esimProducts.some(p => p.region === 'Global' || p.country.toLowerCase().includes('countries'));
+      if (inGlobal) { setActiveCategory('esim'); setEsimTab('global'); return; }
     }
-  }, [initialSearch]);
+  }, [initialSearch, allProducts]);
 
   const getDisplayedPlans = () => {
-    let source: Plan[] = [];
-    if (activeCategory === 'esim') {
-      source = esimTab === 'local' ? LOCAL_PLANS : esimTab === 'regional' ? REGIONAL_PLANS : GLOBAL_PLANS;
-    } else if (activeCategory === 'number') {
-      source = NUMBER_PLANS;
-    } else if (activeCategory === 'vpn') {
-      source = VPN_PLANS;
-    } else if (activeCategory === 'voip') {
-      source = VOIP_PLANS;
-    } else if (activeCategory === 'sms') {
-      source = SMS_PLANS;
-    } else if (activeCategory === 'mms') {
-      source = MMS_PLANS;
-    } else if (activeCategory === '2fa') {
-      source = TWOFA_PLANS;
-    }
+    // Filter products by category
+    let source: Plan[] = allProducts.filter(p => {
+      if (activeCategory === 'esim') {
+        // For eSIM, filter by tab type
+        if (esimTab === 'local') {
+          // Local plans: region should be a country name (not Global, Eurolink, etc.)
+          return p.type === 'esim' && p.region !== 'Global' && 
+                 !['Eurolink', 'Asialink', 'Latamlink', 'Menalink'].includes(p.region);
+        } else if (esimTab === 'regional') {
+          // Regional plans: region should be one of the regional names
+          return p.type === 'esim' && ['Eurolink', 'Asialink', 'Latamlink', 'Menalink'].includes(p.region);
+        } else {
+          // Global plans: region should be Global
+          return p.type === 'esim' && p.region === 'Global';
+        }
+      } else {
+        return p.type === activeCategory;
+      }
+    });
 
+    // Apply search filter
     if (searchTerm) {
       const lower = searchTerm.toLowerCase();
       source = source.filter(p => 
         p.country.toLowerCase().includes(lower) || 
         p.region.toLowerCase().includes(lower) ||
-        p.data.toLowerCase().includes(lower)
+        p.data.toLowerCase().includes(lower) ||
+        (p.description && p.description.toLowerCase().includes(lower))
       );
     }
     return source;
@@ -465,6 +198,22 @@ const Marketplace: React.FC = () => {
       />
       <BreadcrumbSchemaScript data={breadcrumbData} />
       <div className="min-h-screen bg-pars-bg dark:bg-stone-950 pb-24 relative transition-colors duration-300">
+      
+      {loading && (
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <LoadingSpinner size="lg" />
+        </div>
+      )}
+
+      {error && (
+        <div className="max-w-5xl mx-auto px-4 py-8">
+          <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-6 text-center">
+            <p className="text-red-800 dark:text-red-300 font-bold">{error}</p>
+          </div>
+        </div>
+      )}
+
+      {!loading && !error && (
       
       {/* Header & Tabs */}
       <div className="bg-white/95 dark:bg-stone-900/95 backdrop-blur-md border-b border-gray-100 dark:border-stone-800 sticky top-16 z-30 shadow-sm transition-all duration-300">
@@ -628,6 +377,8 @@ const Marketplace: React.FC = () => {
           onClose={() => setSelectedPlanForDetail(null)}
           onBuy={() => handleBuyFromModal(selectedPlanForDetail)}
         />
+      )}
+      </div>
       )}
     </div>
     </>
@@ -880,23 +631,12 @@ const PlanDetailsModal: React.FC<{ plan: Plan; isOpen: boolean; onClose: () => v
                             <Star className="h-4 w-4 fill-current" />
                             <Star className="h-4 w-4 fill-current" />
                          </div>
-                         <p className="text-sm text-gray-500 dark:text-gray-400">Based on 1,204 reviews</p>
+                         <p className="text-sm text-gray-500 dark:text-gray-400">Based on customer reviews</p>
                       </div>
                    </div>
 
-                   <div className="space-y-4">
-                      {plan.reviews?.map((review) => (
-                         <div key={review.id} className="p-4 bg-gray-50 dark:bg-stone-800 rounded-xl">
-                            <div className="flex justify-between items-start mb-2">
-                               <span className="font-bold text-gray-900 dark:text-white">{review.user}</span>
-                               <span className="text-xs text-gray-500 dark:text-gray-400">{review.date}</span>
-                            </div>
-                            <div className="flex text-amber-400 mb-2">
-                               {[...Array(review.rating)].map((_, i) => <Star key={i} className="h-3 w-3 fill-current" />)}
-                            </div>
-                            <p className="text-sm text-gray-600 dark:text-gray-300">{review.comment}</p>
-                         </div>
-                      ))}
+                   <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+                      <p>Reviews feature coming soon. Check back later for customer feedback!</p>
                    </div>
                 </div>
              )}
