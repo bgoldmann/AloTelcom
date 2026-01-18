@@ -48,7 +48,9 @@ VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
 VITE_GEMINI_API_KEY=your_gemini_api_key
 
 # Provider Integration (Optional - Phase 1)
-VITE_REDTEA_API_KEY=your_redtea_api_key
+# Redtea Mobile (eSIMAccess) - Get credentials from https://esimaccess.com/
+VITE_REDTEA_API_KEY=your_access_code_here  # AccessCode (required) - sent in RT-AccessCode header
+VITE_REDTEA_API_SECRET=your_secret_key_here  # SecretKey (optional) - enables HMAC-SHA256 signature authentication
 VITE_TELNYX_API_KEY=your_telnyx_api_key
 VITE_TELNYX_VERIFY_PROFILE_ID=your_verify_profile_id (optional, for 2FA)
 VITE_AIRALO_API_KEY=your_airalo_api_key (optional)

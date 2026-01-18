@@ -30,7 +30,7 @@ export class RedteaMobileProvider extends BaseProvider {
 
   /**
    * Validate Redtea Mobile specific configuration
-   * eSIMAccess uses Access Code (API Key) for authentication
+   * eSIMAccess uses Access Code (required) and SecretKey (optional) for authentication
    * Reference: https://docs.esimaccess.com/
    */
   protected async validateConfig(): Promise<void> {
@@ -40,20 +40,116 @@ export class RedteaMobileProvider extends BaseProvider {
       throw new Error('eSIMAccess Access Code (API Key) is required. Get it from https://esimaccess.com/');
     }
 
-    // eSIMAccess uses Access Code, not API secret typically
-    // But support it if provided in config
+    // SecretKey (apiSecret) is optional but recommended for HMAC-SHA256 signature authentication
+    // If provided, enables more secure authentication method
+  }
+
+  /**
+   * Generate HMAC-SHA256 signature for eSIMAccess API authentication
+   * Reference: https://docs.esimaccess.com/docs/what-api-authentication-method-do-you-support/
+   * 
+   * @param timestamp - Request timestamp (format: YYYYMMDDHHmmss)
+   * @param requestId - Unique request ID (UUID)
+   * @param requestBody - Request body string (for POST/PUT requests)
+   * @returns Base64-encoded HMAC-SHA256 signature
+   */
+  private async generateHMACSignature(
+    timestamp: string,
+    requestId: string,
+    requestBody?: string
+  ): Promise<string> {
+    if (!this.config.apiSecret) {
+      throw new Error('SecretKey (apiSecret) is required for HMAC signature generation');
+    }
+
+    // Combine timestamp, requestId, and request body (if present)
+    const signatureString = `${timestamp}${requestId}${requestBody || ''}`;
+
+    // Use Web Crypto API for HMAC-SHA256
+    const encoder = new TextEncoder();
+    const keyData = encoder.encode(this.config.apiSecret);
+    const messageData = encoder.encode(signatureString);
+
+    // Import key for HMAC
+    const cryptoKey = await crypto.subtle.importKey(
+      'raw',
+      keyData,
+      { name: 'HMAC', hash: 'SHA-256' },
+      false,
+      ['sign']
+    );
+
+    // Generate signature
+    const signature = await crypto.subtle.sign('HMAC', cryptoKey, messageData);
+
+    // Convert to Base64
+    return btoa(String.fromCharCode(...new Uint8Array(signature)));
+  }
+
+  /**
+   * Generate unique request ID (UUID v4)
+   */
+  private generateRequestId(): string {
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+      const r = (Math.random() * 16) | 0;
+      const v = c === 'x' ? r : (r & 0x3) | 0x8;
+      return v.toString(16);
+    });
+  }
+
+  /**
+   * Format timestamp for eSIMAccess API (YYYYMMDDHHmmss)
+   */
+  private formatTimestamp(date: Date = new Date()): string {
+    const year = date.getUTCFullYear();
+    const month = String(date.getUTCMonth() + 1).padStart(2, '0');
+    const day = String(date.getUTCDate()).padStart(2, '0');
+    const hours = String(date.getUTCHours()).padStart(2, '0');
+    const minutes = String(date.getUTCMinutes()).padStart(2, '0');
+    const seconds = String(date.getUTCSeconds()).padStart(2, '0');
+    return `${year}${month}${day}${hours}${minutes}${seconds}`;
   }
 
   /**
    * Get authentication headers for eSIMAccess API
+   * Supports two authentication methods:
+   * 1. Simple: RT-AccessCode header only (when SecretKey not provided)
+   * 2. HMAC: RT-AccessCode, RT-Timestamp, RT-RequestID, RT-Signature headers (when SecretKey provided)
+   * 
    * Reference: https://docs.esimaccess.com/
+   * 
+   * @param method - HTTP method (GET, POST, PUT, etc.)
+   * @param requestBody - Request body string (for POST/PUT requests, used in signature calculation)
+   * @returns Authentication headers object
    */
-  protected getAuthHeaders(): Record<string, string> {
-    return {
-      'Authorization': `Bearer ${this.config.apiKey}`, // Access Code
+  protected async getAuthHeaders(
+    method: string = 'GET',
+    requestBody?: string
+  ): Promise<Record<string, string>> {
+    const headers: Record<string, string> = {
+      'RT-AccessCode': this.config.apiKey || '', // Access Code (required)
       'Content-Type': 'application/json',
       'Accept': 'application/json',
     };
+
+    // If SecretKey is provided, use HMAC-SHA256 signature authentication
+    if (this.config.apiSecret) {
+      const timestamp = this.formatTimestamp();
+      const requestId = this.generateRequestId();
+
+      try {
+        const signature = await this.generateHMACSignature(timestamp, requestId, requestBody);
+        
+        headers['RT-Timestamp'] = timestamp;
+        headers['RT-RequestID'] = requestId;
+        headers['RT-Signature'] = signature;
+      } catch (error: any) {
+        console.warn('Failed to generate HMAC signature, falling back to simple authentication:', error);
+        // Fall back to simple authentication if signature generation fails
+      }
+    }
+
+    return headers;
   }
 
   /**
@@ -76,11 +172,12 @@ export class RedteaMobileProvider extends BaseProvider {
     try {
       // Test API with a lightweight endpoint (e.g., account/balance or countries list)
       // Reference: eSIMAccess API documentation
+      const authHeaders = await this.getAuthHeaders('GET');
       const response = await this.apiRequest<{ success?: boolean; data?: any }>(
         `${this.getBaseUrl()}/countries`, // Adjust endpoint based on actual API
         {
           method: 'GET',
-          headers: this.getAuthHeaders(),
+          headers: authHeaders,
         },
         1 // Only 1 retry for health check
       ).catch(() => null);
@@ -117,6 +214,7 @@ export class RedteaMobileProvider extends BaseProvider {
     try {
       // TODO: Update endpoint based on actual eSIMAccess API documentation
       // Example structure - adjust based on actual API response format
+      const authHeaders = await this.getAuthHeaders('GET');
       const response = await this.apiRequest<{ 
         countries?: Array<{ code: string; name: string }>;
         data?: string[];
@@ -125,7 +223,7 @@ export class RedteaMobileProvider extends BaseProvider {
         `${this.getBaseUrl()}/countries`,
         {
           method: 'GET',
-          headers: this.getAuthHeaders(),
+          headers: authHeaders,
         }
       );
 
@@ -167,6 +265,23 @@ export class RedteaMobileProvider extends BaseProvider {
     try {
       // TODO: Update based on actual eSIMAccess API documentation
       // Adjust endpoint and request body format per API spec
+      const requestBody = JSON.stringify({
+        // Map order fields to eSIMAccess API format
+        // Adjust field names based on actual API specification
+        country: order.countryCode,
+        country_code: order.countryCode.toUpperCase(),
+        data: order.dataAmount,
+        data_amount: order.dataAmount,
+        validity: order.validity,
+        validity_days: this.extractDays(order.validity),
+        customer_email: order.customerEmail,
+        customer_name: order.customerName,
+        imei: order.imei,
+        device_model: order.deviceModel,
+        // Additional eSIMAccess-specific fields if required
+      });
+      
+      const authHeaders = await this.getAuthHeaders('POST', requestBody);
       const response = await this.apiRequest<{
         orderId?: string;
         id?: string;
@@ -183,22 +298,8 @@ export class RedteaMobileProvider extends BaseProvider {
         `${this.getBaseUrl()}/orders`, // Adjust endpoint per API docs
         {
           method: 'POST',
-          headers: this.getAuthHeaders(),
-          body: JSON.stringify({
-            // Map order fields to eSIMAccess API format
-            // Adjust field names based on actual API specification
-            country: order.countryCode,
-            country_code: order.countryCode.toUpperCase(),
-            data: order.dataAmount,
-            data_amount: order.dataAmount,
-            validity: order.validity,
-            validity_days: this.extractDays(order.validity),
-            customer_email: order.customerEmail,
-            customer_name: order.customerName,
-            imei: order.imei,
-            device_model: order.deviceModel,
-            // Additional eSIMAccess-specific fields if required
-          }),
+          headers: authHeaders,
+          body: requestBody,
         }
       );
 
@@ -251,6 +352,7 @@ export class RedteaMobileProvider extends BaseProvider {
 
     try {
       // TODO: Update endpoint based on actual eSIMAccess API documentation
+      const authHeaders = await this.getAuthHeaders('GET');
       const response = await this.apiRequest<{ 
         status?: string;
         state?: string;
@@ -259,7 +361,7 @@ export class RedteaMobileProvider extends BaseProvider {
         `${this.getBaseUrl()}/orders/${providerOrderId}`,
         {
           method: 'GET',
-          headers: this.getAuthHeaders(),
+          headers: authHeaders,
         }
       );
 
@@ -297,11 +399,12 @@ export class RedteaMobileProvider extends BaseProvider {
 
     try {
       // TODO: Update endpoint based on actual eSIMAccess API documentation
+      const authHeaders = await this.getAuthHeaders('POST');
       await this.apiRequest<{ success?: boolean }>(
         `${this.getBaseUrl()}/orders/${providerOrderId}/cancel`,
         {
           method: 'POST',
-          headers: this.getAuthHeaders(),
+          headers: authHeaders,
         }
       );
       return true;
@@ -326,6 +429,7 @@ export class RedteaMobileProvider extends BaseProvider {
 
     try {
       // TODO: Update endpoint based on actual eSIMAccess API documentation
+      const authHeaders = await this.getAuthHeaders('GET');
       const response = await this.apiRequest<{
         country_code?: string;
         active?: boolean;
@@ -336,7 +440,7 @@ export class RedteaMobileProvider extends BaseProvider {
         `${this.getBaseUrl()}/countries/${countryCode.toUpperCase()}`,
         {
           method: 'GET',
-          headers: this.getAuthHeaders(),
+          headers: authHeaders,
         }
       );
 

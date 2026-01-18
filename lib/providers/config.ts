@@ -12,8 +12,8 @@ import type { ProviderConfig } from './types';
 
 export interface ProviderEnvConfig {
   redtea?: {
-    apiKey?: string;
-    apiSecret?: string;
+    apiKey?: string; // AccessCode from eSIMAccess (required)
+    apiSecret?: string; // SecretKey from eSIMAccess (optional, enables HMAC-SHA256 signature authentication)
     baseUrl?: string;
   };
   telnyx?: {
@@ -76,12 +76,13 @@ export async function initializeProviders(): Promise<void> {
   // Initialize Redtea Mobile / eSIMAccess (Tier 1 eSIM Provider / Backup Option)
   // Can function as both primary and backup depending on configuration
   // API Documentation: https://docs.esimaccess.com/
+  // Authentication: Uses AccessCode (required) and SecretKey (optional) for HMAC-SHA256 signature
   if (config.redtea?.apiKey) {
     try {
       const redteaProvider = new RedteaMobileProvider();
       const redteaConfig: ProviderConfig = {
-        apiKey: config.redtea.apiKey, // Access Code from eSIMAccess
-        apiSecret: config.redtea.apiSecret, // Optional
+        apiKey: config.redtea.apiKey, // AccessCode from eSIMAccess (required) - sent in RT-AccessCode header
+        apiSecret: config.redtea.apiSecret, // SecretKey from eSIMAccess (optional) - enables HMAC-SHA256 signature authentication
         baseUrl: config.redtea.baseUrl || 'https://api.esimaccess.com/v1',
         timeout: 30000,
         retryAttempts: 3,
@@ -91,12 +92,18 @@ export async function initializeProviders(): Promise<void> {
       providerManager.registerProvider(redteaProvider);
       console.log('✅ Redtea Mobile (eSIMAccess) provider initialized');
       console.log('   📚 API Docs: https://docs.esimaccess.com/');
+      if (config.redtea.apiSecret) {
+        console.log('   🔐 Using HMAC-SHA256 signature authentication');
+      } else {
+        console.log('   ⚠️ Using simple authentication (consider adding SecretKey for enhanced security)');
+      }
     } catch (error) {
       console.error('❌ Failed to initialize Redtea Mobile provider', error);
     }
   } else {
     console.warn('⚠️ Redtea Mobile API key not configured (VITE_REDTEA_API_KEY)');
-    console.warn('   Get your Access Code from: https://esimaccess.com/');
+    console.warn('   Get your AccessCode from: https://esimaccess.com/');
+    console.warn('   Optional: Add VITE_REDTEA_API_SECRET (SecretKey) for HMAC authentication');
   }
 
   // Initialize Telnyx (Tier 1 Communication Provider)

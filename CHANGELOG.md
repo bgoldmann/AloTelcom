@@ -83,6 +83,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - **2FA:** 3 plans ($0.05 - $0.10) for SMS, Voice, and Flash Call verification channels
 
 ### Fixed
+- **eSIMAccess API Authentication - Corrected Authentication Method**
+  - Fixed incorrect `Authorization: Bearer` authentication method in RedteaMobileProvider
+  - Updated to use correct eSIMAccess API authentication: `RT-AccessCode` header (required)
+  - Implemented optional HMAC-SHA256 signature authentication when SecretKey is provided
+  - When SecretKey is available, uses `RT-AccessCode`, `RT-Timestamp`, `RT-RequestID`, and `RT-Signature` headers
+  - When SecretKey is not provided, uses only `RT-AccessCode` header (simple authentication)
+  - Added `generateHMACSignature()` helper method using Web Crypto API for HMAC-SHA256 calculation
+  - Updated all API request methods to support async authentication header generation
+  - Updated configuration comments to clarify AccessCode (required) vs SecretKey (optional)
+  - Updated documentation in README.md and lib/providers/README.md with correct authentication details
+  - Files updated:
+    - `lib/providers/adapters/RedteaMobileProvider.ts` - Fixed authentication headers and added HMAC signature support
+    - `lib/providers/config.ts` - Updated configuration comments
+    - `README.md` - Updated environment variable documentation
+    - `lib/providers/README.md` - Updated authentication method documentation
+  - Reference: https://docs.esimaccess.com/
 - **Critical TypeScript Compilation Errors - Blog Posts & Countries Tables**
   - Added missing `blog_posts` table type definition to `lib/database.types.ts`
   - Added missing `countries` table type definition to `lib/database.types.ts`

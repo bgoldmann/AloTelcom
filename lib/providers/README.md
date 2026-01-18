@@ -21,9 +21,11 @@ Add to your `.env` file:
 
 ```env
 # Redtea Mobile (eSIMAccess)
-VITE_REDTEA_API_KEY=your_api_key_here
-VITE_REDTEA_API_SECRET=your_api_secret_here (optional)
-VITE_REDTEA_BASE_URL=https://api.esimaccess.com (optional)
+# Authentication: AccessCode (required) + SecretKey (optional for HMAC-SHA256)
+# Get credentials from: https://esimaccess.com/
+VITE_REDTEA_API_KEY=your_access_code_here  # AccessCode (required) - sent in RT-AccessCode header
+VITE_REDTEA_API_SECRET=your_secret_key_here  # SecretKey (optional) - enables HMAC-SHA256 signature authentication
+VITE_REDTEA_BASE_URL=https://api.esimaccess.com/v1  # Optional, defaults to https://api.esimaccess.com/v1
 
 # Telnyx
 VITE_TELNYX_API_KEY=your_api_key_here
@@ -189,6 +191,12 @@ console.log('Reason:', recommendation.reason);
 
 - **Coverage**: 200+ countries
 - **Tier**: 1 (Primary)
+- **API Documentation**: https://docs.esimaccess.com/
+- **Authentication**:
+  - **AccessCode** (required): Sent in `RT-AccessCode` header
+  - **SecretKey** (optional): Enables HMAC-SHA256 signature authentication for enhanced security
+  - When SecretKey is provided, uses `RT-AccessCode`, `RT-Timestamp`, `RT-RequestID`, and `RT-Signature` headers
+  - When SecretKey is not provided, uses only `RT-AccessCode` header (simple authentication)
 - **Features**:
   - eSIM order creation
   - QR code generation
