@@ -42,6 +42,7 @@ const Marketplace: React.FC = () => {
   const [allProducts, setAllProducts] = useState<Plan[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [retryCount, setRetryCount] = useState(0);
   
   // Selection State (Master-Detail for eSIM)
   const [selectedCountryName, setSelectedCountryName] = useState<string | null>(null);
@@ -108,7 +109,13 @@ const Marketplace: React.FC = () => {
       isMounted = false;
       clearTimeout(timeoutId);
     };
-  }, []);
+  }, [retryCount]); // Retry when retryCount changes
+
+  // Retry function
+  const handleRetry = () => {
+    setRetryCount(prev => prev + 1);
+    setError(null);
+  };
 
   // Auto-switch category based on search term
   useEffect(() => {
@@ -256,16 +263,29 @@ const Marketplace: React.FC = () => {
               </div>
               <div className="flex-1">
                 <h3 className="text-red-800 dark:text-red-300 font-bold mb-2">Error Loading Products</h3>
-                <p className="text-red-700 dark:text-red-400 text-sm mb-4">{error}</p>
+                <div className="text-red-700 dark:text-red-400 text-sm mb-4 whitespace-pre-line font-mono text-xs bg-red-100 dark:bg-red-900/40 p-3 rounded border border-red-200 dark:border-red-800">
+                  {error}
+                </div>
                 <div className="mt-4 text-xs text-red-600 dark:text-red-500 bg-red-100 dark:bg-red-900/30 p-3 rounded-lg">
-                  <p className="font-semibold mb-2">Troubleshooting steps:</p>
-                  <ul className="list-disc list-inside space-y-1">
-                    <li>Check browser console (F12) for detailed error messages</li>
-                    <li>Verify Supabase environment variables are set: VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY</li>
-                    <li>Ensure the database schema (schema.sql) and seed data (seed.sql) have been run</li>
-                    <li>Check Supabase dashboard for RLS policies and table permissions</li>
-                    <li>Verify the products table exists and has data</li>
+                  <p className="font-semibold mb-2">Environment Check:</p>
+                  <ul className="list-disc list-inside space-y-1 mb-3">
+                    <li>VITE_SUPABASE_URL: {import.meta.env.VITE_SUPABASE_URL ? '✅ Set' : '❌ Missing'}</li>
+                    <li>VITE_SUPABASE_ANON_KEY: {import.meta.env.VITE_SUPABASE_ANON_KEY ? '✅ Set' : '❌ Missing'}</li>
                   </ul>
+                  <p className="font-semibold mb-2">Troubleshooting steps:</p>
+                  <ul className="list-disc list-inside space-y-1 mb-3">
+                    <li>Open browser console (F12) and check for detailed error messages</li>
+                    <li>If variables are missing, set them in .env.local (local) or Vercel environment variables (production)</li>
+                    <li>Run schema.sql and seed.sql in Supabase SQL Editor</li>
+                    <li>Check Supabase dashboard → Authentication → Policies for products table</li>
+                    <li>Verify products table exists: SELECT COUNT(*) FROM products;</li>
+                  </ul>
+                  <button
+                    onClick={handleRetry}
+                    className="mt-3 px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-lg transition-colors"
+                  >
+                    🔄 Retry Connection
+                  </button>
                 </div>
               </div>
             </div>

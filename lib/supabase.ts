@@ -18,22 +18,30 @@ if (!supabaseUrl || !supabaseAnonKey) {
   // The error will be caught when trying to use Supabase
 }
 
-// Create client even if env vars are missing (will fail gracefully on first use)
-export const supabase = supabaseUrl && supabaseAnonKey
-  ? createClient<Database>(supabaseUrl, supabaseAnonKey, {
-      auth: {
-        autoRefreshToken: true,
-        persistSession: true,
-        detectSessionInUrl: true
-      }
-    })
-  : createClient<Database>('https://placeholder.supabase.co', 'placeholder-key', {
-      auth: {
-        autoRefreshToken: false,
-        persistSession: false,
-        detectSessionInUrl: false
-      }
-    });
+// Create client - always create a client, but it will fail gracefully if env vars are missing
+export const supabase = createClient<Database>(
+  supabaseUrl || 'https://placeholder.supabase.co',
+  supabaseAnonKey || 'placeholder-key',
+  {
+    auth: {
+      autoRefreshToken: !!supabaseUrl && !!supabaseAnonKey,
+      persistSession: !!supabaseUrl && !!supabaseAnonKey,
+      detectSessionInUrl: !!supabaseUrl && !!supabaseAnonKey
+    }
+  }
+);
+
+// Log environment variable status
+if (!supabaseUrl || !supabaseAnonKey) {
+  console.error('❌ Supabase environment variables are missing!');
+  console.error('Required variables:', {
+    VITE_SUPABASE_URL: supabaseUrl ? '✅ Set' : '❌ MISSING',
+    VITE_SUPABASE_ANON_KEY: supabaseAnonKey ? '✅ Set' : '❌ MISSING'
+  });
+  console.error('Please set these in your .env.local file (local) or Vercel environment variables (production)');
+} else {
+  console.log('✅ Supabase environment variables are set');
+}
 
 // Helper function to get current user
 export const getCurrentUser = async () => {

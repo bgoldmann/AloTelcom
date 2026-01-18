@@ -142,11 +142,12 @@ export const testSupabaseConnection = async (): Promise<{ success: boolean; erro
       if (!supabaseAnonKey) missing.push('VITE_SUPABASE_ANON_KEY');
       return {
         success: false,
-        error: `Missing environment variables: ${missing.join(', ')}. Please set these in your .env.local file or Vercel environment variables.`
+        error: `Missing environment variables: ${missing.join(', ')}. Please set these in your .env.local file (for local dev) or Vercel environment variables (for production).`
       };
     }
     
     console.log('Testing Supabase connection...');
+    console.log('Supabase URL:', supabaseUrl ? supabaseUrl.substring(0, 30) + '...' : 'MISSING');
     const { data, error } = await supabase
       .from('products')
       .select('id')
