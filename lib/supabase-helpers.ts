@@ -224,49 +224,81 @@ export const testSupabaseConnection = async (): Promise<{ success: boolean; erro
   }
 };
 
-// Product operations
+// Product operations - with fallback to direct fetch
 export const getAllProducts = async (): Promise<Plan[]> => {
   console.log('getAllProducts: Starting query...');
   
-  // Test connection first
-  const connectionTest = await testSupabaseConnection();
-  if (!connectionTest.success) {
-    throw new Error(connectionTest.error || 'Unable to connect to Supabase.');
-  }
+  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+  const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
   
-  const { data, error } = await supabase
-    .from('products')
-    .select('*')
-    .order('is_popular', { ascending: false })
-    .order('price', { ascending: true });
-
-  if (error) {
-    console.error('getAllProducts: Supabase error:', error);
-    console.error('Error code:', error.code);
-    console.error('Error details:', error.details);
-    console.error('Error hint:', error.hint);
+  // Try Supabase client first, with timeout fallback to direct fetch
+  try {
+    // Set up a promise race to detect timeouts
+    const clientPromise = supabase
+      .from('products')
+      .select('*')
+      .order('is_popular', { ascending: false })
+      .order('price', { ascending: true });
     
-    // Provide more specific error messages
-    if (error.code === 'PGRST116') {
-      throw new Error('Products table not found. Please run the schema.sql script in Supabase.');
-    } else if (error.code === '42501') {
-      throw new Error('Permission denied. Please check RLS policies in Supabase.');
-    } else if (error.message?.includes('JWT')) {
-      throw new Error('Invalid Supabase API key. Please check VITE_SUPABASE_ANON_KEY.');
-    } else if (error.message?.includes('fetch')) {
-      throw new Error('Network error. Please check your internet connection and Supabase URL.');
+    const timeoutPromise = new Promise<never>((_, reject) => {
+      setTimeout(() => reject(new Error('TIMEOUT')), 6000); // 6 second timeout
+    });
+    
+    const { data, error } = await Promise.race([
+      clientPromise,
+      timeoutPromise
+    ]) as { data: any; error: any };
+
+    if (error) {
+      if (error.message === 'TIMEOUT') {
+        throw new Error('TIMEOUT'); // Trigger fallback
+      }
+      console.error('getAllProducts: Supabase error:', error);
+      throw error; // Will try fallback below
     }
-    
-    throw new Error(`Failed to fetch products: ${error.message || 'Unknown error'}`);
-  }
 
-  if (!data) {
-    console.warn('getAllProducts: No data returned from query');
-    return [];
-  }
+    if (!data) {
+      console.warn('getAllProducts: No data returned from query');
+      return [];
+    }
 
-  console.log('getAllProducts: Successfully fetched', data.length, 'products');
-  return data.map(mapDbProductToPlan);
+    console.log('getAllProducts: Successfully fetched', data.length, 'products using Supabase client');
+    return data.map(mapDbProductToPlan);
+  } catch (clientError: any) {
+    // Fallback to direct fetch if client times out or fails
+    if (clientError.message === 'TIMEOUT' || clientError.message?.includes('timeout') || !supabaseUrl || !supabaseAnonKey) {
+      console.warn('getAllProducts: Supabase client timed out, trying direct fetch fallback...');
+      
+      if (!supabaseUrl || !supabaseAnonKey) {
+        throw new Error('Missing Supabase environment variables.');
+      }
+      
+      try {
+        const response = await fetch(`${supabaseUrl}/rest/v1/products?select=*&order=is_popular.desc,price.asc`, {
+          headers: {
+            'apikey': supabaseAnonKey,
+            'Authorization': `Bearer ${supabaseAnonKey}`,
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        if (!response.ok) {
+          const text = await response.text();
+          throw new Error(`HTTP ${response.status}: ${text.substring(0, 200)}`);
+        }
+        
+        const data = await response.json();
+        console.log('getAllProducts: Successfully fetched', data.length, 'products using direct fetch fallback');
+        return data.map(mapDbProductToPlan);
+      } catch (fetchError: any) {
+        console.error('getAllProducts: Direct fetch also failed:', fetchError);
+        throw new Error(`Failed to fetch products: ${fetchError.message || clientError.message || 'Unknown error'}`);
+      }
+    } else {
+      // Re-throw non-timeout errors
+      throw clientError;
+    }
+  }
 };
 
 export const getProductById = async (productId: string): Promise<Plan | null> => {
