@@ -131,13 +131,24 @@ export const updateUserProfile = async (userId: string, updates: Partial<User>):
 
 // Product operations
 export const getAllProducts = async (): Promise<Plan[]> => {
+  console.log('getAllProducts: Starting query...');
   const { data, error } = await supabase
     .from('products')
     .select('*')
     .order('is_popular', { ascending: false })
     .order('price', { ascending: true });
 
-  if (error || !data) return [];
+  if (error) {
+    console.error('getAllProducts: Supabase error:', error);
+    throw new Error(`Failed to fetch products: ${error.message}`);
+  }
+
+  if (!data) {
+    console.warn('getAllProducts: No data returned from query');
+    return [];
+  }
+
+  console.log('getAllProducts: Successfully fetched', data.length, 'products');
   return data.map(mapDbProductToPlan);
 };
 

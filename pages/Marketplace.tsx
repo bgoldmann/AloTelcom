@@ -51,21 +51,57 @@ const Marketplace: React.FC = () => {
 
   // Fetch products from database
   useEffect(() => {
+    let isMounted = true;
+    const timeoutId = setTimeout(() => {
+      if (isMounted) {
+        console.error('Product fetch timeout - taking too long');
+        setError('Request is taking too long. Please check your connection and try again.');
+        setLoading(false);
+      }
+    }, 10000); // 10 second timeout
+
     const fetchProducts = async () => {
       try {
         setLoading(true);
         setError(null);
+        console.log('Fetching products from database...');
         const products = await getAllProducts();
-        setAllProducts(products);
-      } catch (err) {
+        console.log('Products fetched:', products.length, products);
+        
+        if (!isMounted) return;
+        
+        clearTimeout(timeoutId);
+        
+        if (products.length === 0) {
+          console.warn('No products found in database. Make sure seed.sql has been run.');
+          setError('No products available. The database may be empty. Please run the seed script or contact support.');
+        } else {
+          setAllProducts(products);
+        }
+      } catch (err: any) {
+        if (!isMounted) return;
+        
+        clearTimeout(timeoutId);
         console.error('Error fetching products:', err);
-        setError('Failed to load products. Please try again later.');
+        console.error('Error details:', {
+          message: err?.message,
+          error: err,
+          stack: err?.stack
+        });
+        setError(`Failed to load products: ${err?.message || 'Unknown error'}. Please check your Supabase connection and environment variables.`);
       } finally {
-        setLoading(false);
+        if (isMounted) {
+          setLoading(false);
+        }
       }
     };
 
     fetchProducts();
+    
+    return () => {
+      isMounted = false;
+      clearTimeout(timeoutId);
+    };
   }, []);
 
   // Auto-switch category based on search term
@@ -207,8 +243,26 @@ const Marketplace: React.FC = () => {
 
       {error && (
         <div className="max-w-5xl mx-auto px-4 py-8">
-          <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-6 text-center">
-            <p className="text-red-800 dark:text-red-300 font-bold">{error}</p>
+          <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-6">
+            <div className="flex items-start gap-3">
+              <div className="flex-shrink-0">
+                <Info className="h-5 w-5 text-red-600 dark:text-red-400 mt-0.5" />
+              </div>
+              <div className="flex-1">
+                <h3 className="text-red-800 dark:text-red-300 font-bold mb-2">Error Loading Products</h3>
+                <p className="text-red-700 dark:text-red-400 text-sm mb-4">{error}</p>
+                <div className="mt-4 text-xs text-red-600 dark:text-red-500 bg-red-100 dark:bg-red-900/30 p-3 rounded-lg">
+                  <p className="font-semibold mb-2">Troubleshooting steps:</p>
+                  <ul className="list-disc list-inside space-y-1">
+                    <li>Check browser console (F12) for detailed error messages</li>
+                    <li>Verify Supabase environment variables are set: VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY</li>
+                    <li>Ensure the database schema (schema.sql) and seed data (seed.sql) have been run</li>
+                    <li>Check Supabase dashboard for RLS policies and table permissions</li>
+                    <li>Verify the products table exists and has data</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       )}
